@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--narrow">
+        <div class="page-header">
+            <h1>Login</h1>
+        </div>
+        <div class="card">
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+                <div id="msg" class="msg"></div>
+            </form>
+            <p class="form-footer">Don't have an account? <a href="register.html">Register</a></p>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        redirectIfLoggedIn();
+
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearMsg("msg");
+            try {
+                const data = await apiCall("/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        email: document.getElementById("email").value,
+                        password: document.getElementById("password").value
+                    })
+                });
+                saveAuth(data);
+                window.location.href = "products.html";
+            } catch (err) {
+                showMsg("msg", err.message, "error");
+            }
+        });
+    </script>
+</body>
+</html>

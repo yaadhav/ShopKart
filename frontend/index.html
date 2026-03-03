@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopKart</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="hero">
+        <h1>Welcome to ShopKart</h1>
+        <p>A clean, modern e-commerce platform built with Spring Boot.</p>
+        <div class="hero-actions" id="guest-actions">
+            <a href="pages/login.html"><button class="btn btn-primary">Login</button></a>
+            <a href="pages/register.html"><button class="btn btn-secondary">Register</button></a>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>redirectIfLoggedIn();</script>
+</body>
+</html>

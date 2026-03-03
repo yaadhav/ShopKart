@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--wide products-page">
+        <div class="filter-bar filter-bar--compact">
+            <div class="filter-group">
+                <select id="f-brand"><option value="">Brand</option></select>
+            </div>
+            <div class="filter-group">
+                <select id="f-category"><option value="">Category</option></select>
+            </div>
+            <div class="filter-group">
+                <select id="f-fashion_style"><option value="">Style</option></select>
+            </div>
+            <div class="filter-group">
+                <select id="f-occasion"><option value="">Occasion</option></select>
+            </div>
+            <div class="filter-group">
+                <select id="f-size"><option value="">Size</option></select>
+            </div>
+            <div class="filter-group">
+                <div class="sort-control">
+                    <select id="f-sort_by"></select>
+                    <button class="btn btn-secondary btn-sm sort-toggle" id="sort-order-btn" onclick="toggleSortOrder()" title="Toggle sort order">↑</button>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary btn-sm" onclick="loadProducts(0)">Apply</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+            </div>
+        </div>
+
+        <div id="product-list" class="product-grid"></div>
+        <div id="msg" class="empty-state" style="display:none;"></div>
+
+        <div id="bottom-controls" class="bottom-controls" style="display:none;">
+            <div class="per-page-control">
+                <label>Per Page</label>
+                <select id="f-page_size" onchange="loadProducts(0)">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        if (!requireAuth()) { /* redirects */ }
+
+        let sortOrder = "asc";
+
+        function toggleSortOrder() {
+            sortOrder = sortOrder === "asc" ? "desc" : "asc";
+            document.getElementById("sort-order-btn").textContent = sortOrder === "asc" ? "↑" : "↓";
+            loadProducts(0);
+        }
+
+        async function loadMeta() {
+            try {
+                const meta = await apiCall("/meta");
+                populateSelect("f-brand", meta.brands);
+                populateSelect("f-category", meta.categories);
+                populateSelect("f-fashion_style", meta.fashion_styles);
+                populateSelect("f-occasion", meta.occasions);
+                populateSelect("f-size", meta.sizes);
+
+                const sortSelect = document.getElementById("f-sort_by");
+                meta.sortable_fields.forEach(item => {
+                    const opt = document.createElement("option");
+                    opt.value = item.name;
+                    opt.textContent = item.display_name;
+                    sortSelect.appendChild(opt);
+                });
+            } catch (err) {
+                console.error("Failed to load meta:", err);
+            }
+        }
+
+        function resetFilters() {
+            ["brand", "category", "fashion_style", "occasion", "size"].forEach(key => {
+                document.getElementById("f-" + key).selectedIndex = 0;
+            });
+            document.getElementById("f-sort_by").selectedIndex = 0;
+            document.getElementById("f-page_size").value = "20";
+            sortOrder = "asc";
+            document.getElementById("sort-order-btn").textContent = "↑";
+            loadProducts(0);
+        }
+
+        function buildParams(page) {
+            const params = new URLSearchParams();
+            ["brand", "category", "fashion_style", "occasion", "size"].forEach(key => {
+                const val = document.getElementById("f-" + key).value;
+                if (val) params.set(key, val);
+            });
+
+            const sortBy = document.getElementById("f-sort_by").value;
+            if (sortBy) {
+                params.set("sort_by", sortBy);
+                params.set("sort_order", sortOrder);
+            }
+
+            params.set("page", page);
+            params.set("page_size", document.getElementById("f-page_size").value);
+            return params;
+        }
+
+        function renderStars(rating) {
+            if (rating == null) return "";
+            const val = parseFloat(rating);
+            let html = '<span class="stars">';
+            for (let i = 1; i <= 5; i++) {
+                if (val >= i) html += '<span class="star star--full">★</span>';
+                else if (val >= i - 0.5) html += '<span class="star star--half">★</span>';
+                else html += '<span class="star star--empty">★</span>';
+            }
+            html += `<span class="star-value">${val}</span></span>`;
+            return html;
+        }
+
+        function renderProduct(p) {
+            const imageHtml = p.image
+                ? `<img src="${p.image}" alt="${p.name}">`
+                : `<span class="placeholder">No image</span>`;
+
+            return `
+                <div class="product-card">
+                    <div class="product-card__image">${imageHtml}</div>
+                    <div class="product-card__body">
+                        <div class="product-card__name">${p.name}</div>
+                        <div class="product-card__desc">${p.description || ""}</div>
+                        <div class="product-card__pricing">
+                            <span class="product-card__price">${p.selling_price_formatted}</span>
+                            ${p.original_price_formatted ? `<span class="product-card__original">${p.original_price_formatted}</span>` : ""}
+                            ${p.discount_percentage_formatted ? `<span class="product-card__discount">${p.discount_percentage_formatted}</span>` : ""}
+                        </div>
+                        <div class="product-card__footer">
+                            <span class="badge">${p.brand_formatted}</span>
+                            ${renderStars(p.rating)}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderPagination(data) {
+            const pag = document.getElementById("pagination");
+            if (data.total_pages <= 1) { pag.innerHTML = ""; return; }
+
+            const current = data.page;
+            const total = data.total_pages;
+            let html = `<button class="btn btn-secondary btn-sm" ${current === 0 ? "disabled" : ""} onclick="loadProducts(${current - 1})">← Prev</button>`;
+
+            const range = pageRange(current, total);
+            range.forEach(p => {
+                if (p === "...") {
+                    html += `<span class="pagination__ellipsis">…</span>`;
+                } else {
+                    html += `<button class="btn btn-sm ${p === current ? "btn-primary" : "btn-secondary"}" onclick="loadProducts(${p})">${p + 1}</button>`;
+                }
+            });
+
+            html += `<span class="pagination__info">${data.total_items} items</span>`;
+            html += `<button class="btn btn-secondary btn-sm" ${current >= total - 1 ? "disabled" : ""} onclick="loadProducts(${current + 1})">Next →</button>`;
+            pag.innerHTML = html;
+        }
+
+        function pageRange(current, total) {
+            if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+            const pages = [];
+            pages.push(0);
+            if (current > 2) pages.push("...");
+            for (let i = Math.max(1, current - 1); i <= Math.min(total - 2, current + 1); i++) {
+                pages.push(i);
+            }
+            if (current < total - 3) pages.push("...");
+            pages.push(total - 1);
+            return pages;
+        }
+
+        async function loadProducts(page = 0) {
+            const list = document.getElementById("product-list");
+            const msg = document.getElementById("msg");
+            const bottom = document.getElementById("bottom-controls");
+            list.innerHTML = "";
+            msg.style.display = "none";
+            bottom.style.display = "none";
+            bottom.classList.remove("bottom-controls--visible");
+
+            try {
+                const data = await apiCall("/products?" + buildParams(page).toString());
+                if (!data.items || data.items.length === 0) {
+                    msg.style.display = "block";
+                    msg.innerHTML = "<p>No products found.</p>";
+                    return;
+                }
+                list.innerHTML = data.items.map(renderProduct).join("");
+                bottom.style.display = "flex";
+                renderPagination(data);
+                checkScrollEnd();
+            } catch (err) {
+                msg.style.display = "block";
+                msg.innerHTML = `<p>${err.message}</p>`;
+            }
+        }
+
+        function checkScrollEnd() {
+            const grid = document.getElementById("product-list");
+            const bottom = document.getElementById("bottom-controls");
+            if (!grid || !bottom || bottom.style.display === "none") return;
+
+            const atBottom = grid.scrollHeight <= grid.clientHeight ||
+                grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 20;
+            bottom.classList.toggle("bottom-controls--visible", atBottom);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const grid = document.getElementById("product-list");
+            if (grid) grid.addEventListener("scroll", checkScrollEnd);
+        });
+
+        loadMeta().then(() => loadProducts());
+    </script>
+</body>
+</html>
