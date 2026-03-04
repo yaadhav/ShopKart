@@ -45,6 +45,69 @@
             </div>
         </div>
 
+        <!-- Admin + Owner: Add Product -->
+        <div id="add-product-section" class="section" style="display:none;">
+            <div class="card">
+                <h3 class="section-title">Add Product</h3>
+                <form id="add-product-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prod-name">Name *</label>
+                            <input type="text" id="prod-name" placeholder="Product name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-description">Description</label>
+                            <input type="text" id="prod-description" placeholder="Short description" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prod-selling-price">Selling Price *</label>
+                            <input type="number" id="prod-selling-price" placeholder="999.00" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-original-price">Original Price *</label>
+                            <input type="number" id="prod-original-price" placeholder="1499.00" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-discount">Discount %</label>
+                            <input type="number" id="prod-discount" placeholder="0" min="0" max="100" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prod-brand">Brand *</label>
+                            <select id="prod-brand" required><option value="">Select</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-category">Category *</label>
+                            <select id="prod-category" required><option value="">Select</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-fashion-style">Style *</label>
+                            <select id="prod-fashion-style" required><option value="">Select</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prod-occasion">Occasion *</label>
+                            <select id="prod-occasion" required><option value="">Select</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prod-size">Size *</label>
+                            <select id="prod-size" required><option value="">Select</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-image">Product Image</label>
+                        <input type="file" id="prod-image" accept="image/jpeg,image/png,image/webp">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                    <div id="product-msg" class="msg"></div>
+                </form>
+            </div>
+        </div>
+
         <!-- Admin: Dashboard -->
         <div id="admin-info-section" class="section" style="display:none;">
             <div class="card">
@@ -67,10 +130,40 @@
 
             if (user.role === "owner") {
                 document.getElementById("create-admin-section").style.display = "block";
-            } else {
-                document.getElementById("admin-info-section").style.display = "block";
             }
+
+            document.getElementById("add-product-section").style.display = "block";
+            loadMeta();
         })();
+
+        async function loadMeta() {
+            try {
+                const meta = await apiCall("/meta");
+                populateSelect("prod-brand", meta.brands);
+                populateSelect("prod-category", meta.categories);
+                populateSelect("prod-fashion-style", meta.fashion_styles);
+                populateSelect("prod-occasion", meta.occasions);
+                populateSelect("prod-size", meta.sizes);
+            } catch (err) {
+                showMsg("product-msg", "Failed to load dropdown data", "error");
+            }
+        }
+
+        function calculateDiscount() {
+            const sellingPrice = parseFloat(document.getElementById("prod-selling-price").value);
+            const originalPrice = parseFloat(document.getElementById("prod-original-price").value);
+            const discountField = document.getElementById("prod-discount");
+
+            if (sellingPrice && originalPrice && originalPrice > 0) {
+                const discount = Math.round(((originalPrice - sellingPrice) / originalPrice) * 100);
+                discountField.value = Math.max(0, Math.min(100, discount));
+            } else {
+                discountField.value = 0;
+            }
+        }
+
+        document.getElementById("prod-selling-price").addEventListener("input", calculateDiscount);
+        document.getElementById("prod-original-price").addEventListener("input", calculateDiscount);
 
         document.getElementById("create-admin-form").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -92,6 +185,50 @@
                 document.getElementById("create-admin-form").reset();
             } catch (err) {
                 showMsg("msg", err.message, "error");
+            }
+        });
+
+        document.getElementById("add-product-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearMsg("product-msg");
+
+            const productData = {
+                name: document.getElementById("prod-name").value,
+                description: document.getElementById("prod-description").value || null,
+                selling_price: parseFloat(document.getElementById("prod-selling-price").value),
+                original_price: parseFloat(document.getElementById("prod-original-price").value),
+                discount_percentage: parseInt(document.getElementById("prod-discount").value) || 0,
+                brand: document.getElementById("prod-brand").value,
+                fashion_style: document.getElementById("prod-fashion-style").value,
+                category: document.getElementById("prod-category").value,
+                occasion: document.getElementById("prod-occasion").value,
+                size: document.getElementById("prod-size").value,
+                image: null
+            };
+
+            const formData = new FormData();
+            formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
+
+            const imageFile = document.getElementById("prod-image").files[0];
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+
+            try {
+                const token = getToken();
+                const res = await fetch(API + "/products", {
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + token },
+                    body: formData
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ message: "Request failed" }));
+                    throw new Error(err.message || "Error " + res.status);
+                }
+                showMsg("product-msg", "Product added successfully", "success");
+                document.getElementById("add-product-form").reset();
+            } catch (err) {
+                showMsg("product-msg", err.message, "error");
             }
         });
     </script>

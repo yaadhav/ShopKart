@@ -18,11 +18,11 @@ public class ProductDTO {
     private BigDecimal originalPrice;
     private Integer discountPercentage;
     private BigDecimal rating;
+    private Integer ratingCount;
     private String brand;
     private String fashionStyle;
     private String category;
     private String occasion;
     private String size;
     private String image;
-    private Integer stock;
 }

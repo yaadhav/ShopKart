@@ -14,10 +14,9 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Component
 public class ProductFormatHandler {
 
-    public Map<String, Object> addFormattedNodes(ProductDTO product) {
+    public static Map<String, Object> addFormattedNodes(ProductDTO product) {
         Map<String, Object> formatted = new LinkedHashMap<>();
         formatted.put(Keys.SELLING_PRICE + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(product.getSellingPrice()));
         formatted.put(Keys.ORIGINAL_PRICE + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(product.getOriginalPrice()));
@@ -28,7 +27,6 @@ public class ProductFormatHandler {
         formatted.put(Keys.FASHION_STYLE + Keys.FORMATTED_SUFFIX, FashionStyle.getDisplayName(FashionStyle.getCode(product.getFashionStyle())));
         formatted.put(Keys.OCCASION + Keys.FORMATTED_SUFFIX, Occasion.getDisplayName(Occasion.getCode(product.getOccasion())));
         formatted.put(Keys.SIZE + Keys.FORMATTED_SUFFIX, Size.getDisplayName(Size.getCode(product.getSize())));
-        formatted.put(Keys.STOCK + Keys.FORMATTED_SUFFIX, product.getStock() > 0 ? Constants.Symbols.IN_STOCK : Constants.Symbols.OUT_OF_STOCK);
         return formatted;
     }
 }

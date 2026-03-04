@@ -12,49 +12,66 @@
         <div class="navbar-links" id="auth-links"></div>
     </nav>
 
-    <div class="container container--wide products-page">
-        <div class="filter-bar filter-bar--compact">
-            <div class="filter-group">
-                <select id="f-brand"><option value="">Brand</option></select>
+    <div class="products-container">
+        <aside class="products-sidebar">
+            <div class="sidebar-header">
+                <h3>Products</h3>
+                <button class="btn-clear-all" onclick="clearAllFilters()">Clear All</button>
             </div>
-            <div class="filter-group">
-                <select id="f-category"><option value="">Category</option></select>
-            </div>
-            <div class="filter-group">
-                <select id="f-fashion_style"><option value="">Style</option></select>
-            </div>
-            <div class="filter-group">
-                <select id="f-occasion"><option value="">Occasion</option></select>
-            </div>
-            <div class="filter-group">
-                <select id="f-size"><option value="">Size</option></select>
-            </div>
-            <div class="filter-group">
-                <div class="sort-control">
-                    <select id="f-sort_by"></select>
-                    <button class="btn btn-secondary btn-sm sort-toggle" id="sort-order-btn" onclick="toggleSortOrder()" title="Toggle sort order">↑</button>
+
+            <div class="sort-section">
+                <div class="sort-controls">
+                    <select id="f-sort_by" class="filter-select" onchange="loadProducts(0)"></select>
+                    <button class="btn-sort-toggle" id="sort-order-btn" onclick="toggleSortOrder()" title="Toggle sort order">
+                        <span id="sort-order-icon">↑</span>
+                    </button>
                 </div>
             </div>
-            <div class="filter-actions">
-                <button class="btn btn-primary btn-sm" onclick="loadProducts(0)">Apply</button>
-                <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
-            </div>
-        </div>
 
-        <div id="product-list" class="product-grid"></div>
-        <div id="msg" class="empty-state" style="display:none;"></div>
+            <div class="filters-divider"></div>
 
-        <div id="bottom-controls" class="bottom-controls" style="display:none;">
-            <div class="per-page-control">
-                <label>Per Page</label>
-                <select id="f-page_size" onchange="loadProducts(0)">
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
+            <div class="filter-section">
+                <h4 class="filter-section-title">Brand</h4>
+                <div id="filter-brand" class="filter-checkboxes"></div>
             </div>
-            <div id="pagination" class="pagination"></div>
-        </div>
+
+            <div class="filter-section">
+                <h4 class="filter-section-title">Category</h4>
+                <div id="filter-category" class="filter-checkboxes"></div>
+            </div>
+
+            <div class="filter-section">
+                <h4 class="filter-section-title">Style</h4>
+                <div id="filter-fashion_style" class="filter-checkboxes"></div>
+            </div>
+
+            <div class="filter-section">
+                <h4 class="filter-section-title">Occasion</h4>
+                <div id="filter-occasion" class="filter-checkboxes"></div>
+            </div>
+
+            <div class="filter-section">
+                <h4 class="filter-section-title">Size</h4>
+                <div id="filter-size" class="filter-checkboxes"></div>
+            </div>
+        </aside>
+
+        <main class="products-main">
+            <div id="product-list" class="product-grid"></div>
+            <div id="msg" class="empty-state" style="display:none;"></div>
+
+            <div id="bottom-controls" class="bottom-controls" style="display:none;">
+                <div class="per-page-control">
+                    <label>Per Page</label>
+                    <select id="f-page_size" onchange="loadProducts(0)">
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </main>
     </div>
 
     <script src="../js/app.js"></script>
@@ -65,18 +82,37 @@
 
         function toggleSortOrder() {
             sortOrder = sortOrder === "asc" ? "desc" : "asc";
-            document.getElementById("sort-order-btn").textContent = sortOrder === "asc" ? "↑" : "↓";
+            document.getElementById("sort-order-icon").textContent = sortOrder === "asc" ? "↑" : "↓";
             loadProducts(0);
+        }
+
+        function populateFilterCheckboxes(containerId, items, filterKey) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            items.forEach(item => {
+                const label = document.createElement("label");
+                label.className = "filter-checkbox";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = item.name;
+                checkbox.dataset.filterKey = filterKey;
+                checkbox.addEventListener("change", () => loadProducts(0));
+                const span = document.createElement("span");
+                span.textContent = item.display_name;
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
         }
 
         async function loadMeta() {
             try {
                 const meta = await apiCall("/meta");
-                populateSelect("f-brand", meta.brands);
-                populateSelect("f-category", meta.categories);
-                populateSelect("f-fashion_style", meta.fashion_styles);
-                populateSelect("f-occasion", meta.occasions);
-                populateSelect("f-size", meta.sizes);
+                populateFilterCheckboxes("filter-brand", meta.brands, "brand");
+                populateFilterCheckboxes("filter-category", meta.categories, "category");
+                populateFilterCheckboxes("filter-fashion_style", meta.fashion_styles, "fashion_style");
+                populateFilterCheckboxes("filter-occasion", meta.occasions, "occasion");
+                populateFilterCheckboxes("filter-size", meta.sizes, "size");
 
                 const sortSelect = document.getElementById("f-sort_by");
                 meta.sortable_fields.forEach(item => {
@@ -90,22 +126,32 @@
             }
         }
 
-        function resetFilters() {
-            ["brand", "category", "fashion_style", "occasion", "size"].forEach(key => {
-                document.getElementById("f-" + key).selectedIndex = 0;
-            });
+        function clearAllFilters() {
+            document.querySelectorAll(".filter-checkboxes input[type=checkbox]").forEach(cb => cb.checked = false);
             document.getElementById("f-sort_by").selectedIndex = 0;
             document.getElementById("f-page_size").value = "20";
             sortOrder = "asc";
-            document.getElementById("sort-order-btn").textContent = "↑";
+            document.getElementById("sort-order-icon").textContent = "↑";
             loadProducts(0);
         }
 
         function buildParams(page) {
             const params = new URLSearchParams();
-            ["brand", "category", "fashion_style", "occasion", "size"].forEach(key => {
-                const val = document.getElementById("f-" + key).value;
-                if (val) params.set(key, val);
+            
+            const checkedBoxes = document.querySelectorAll(".filter-checkboxes input[type=checkbox]:checked");
+            const filterGroups = {};
+            
+            checkedBoxes.forEach(cb => {
+                const key = cb.dataset.filterKey;
+                if (!filterGroups[key]) filterGroups[key] = [];
+                filterGroups[key].push(cb.value);
+            });
+
+            // Format as fieldname.value1,value2
+            Object.keys(filterGroups).forEach(key => {
+                if (filterGroups[key].length > 0) {
+                    params.set(`${key}.${filterGroups[key].join(",")}`, "");
+                }
             });
 
             const sortBy = document.getElementById("f-sort_by").value;
@@ -119,8 +165,8 @@
             return params;
         }
 
-        function renderStars(rating) {
-            if (rating == null) return "";
+        function renderStars(rating, ratingCount) {
+            if (rating == null || parseFloat(rating) === 0) return "";
             const val = parseFloat(rating);
             let html = '<span class="stars">';
             for (let i = 1; i <= 5; i++) {
@@ -128,13 +174,16 @@
                 else if (val >= i - 0.5) html += '<span class="star star--half">★</span>';
                 else html += '<span class="star star--empty">★</span>';
             }
-            html += `<span class="star-value">${val}</span></span>`;
+            html += `<span class="star-value">${val}</span>`;
+            if (ratingCount > 0) html += `<span class="star-count">(${ratingCount})</span>`;
+            html += '</span>';
             return html;
         }
 
         function renderProduct(p) {
-            const imageHtml = p.image
-                ? `<img src="${p.image}" alt="${p.name}">`
+            const imageUrl = p.image ? API + p.image : null;
+            const imageHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${p.name}">`
                 : `<span class="placeholder">No image</span>`;
 
             return `
@@ -150,7 +199,7 @@
                         </div>
                         <div class="product-card__footer">
                             <span class="badge">${p.brand_formatted}</span>
-                            ${renderStars(p.rating)}
+                            ${renderStars(p.rating, p.rating_count)}
                         </div>
                     </div>
                 </div>`;
@@ -198,7 +247,6 @@
             list.innerHTML = "";
             msg.style.display = "none";
             bottom.style.display = "none";
-            bottom.classList.remove("bottom-controls--visible");
 
             try {
                 const data = await apiCall("/products?" + buildParams(page).toString());
@@ -210,27 +258,11 @@
                 list.innerHTML = data.items.map(renderProduct).join("");
                 bottom.style.display = "flex";
                 renderPagination(data);
-                checkScrollEnd();
             } catch (err) {
                 msg.style.display = "block";
                 msg.innerHTML = `<p>${err.message}</p>`;
             }
         }
-
-        function checkScrollEnd() {
-            const grid = document.getElementById("product-list");
-            const bottom = document.getElementById("bottom-controls");
-            if (!grid || !bottom || bottom.style.display === "none") return;
-
-            const atBottom = grid.scrollHeight <= grid.clientHeight ||
-                grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 20;
-            bottom.classList.toggle("bottom-controls--visible", atBottom);
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const grid = document.getElementById("product-list");
-            if (grid) grid.addEventListener("scroll", checkScrollEnd);
-        });
 
         loadMeta().then(() => loadProducts());
     </script>

@@ -5,15 +5,15 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 
 public enum Category {
-    TSHIRT(1, "tshirt", "Tshirt"),
-    SHIRT(2, "shirt", "Shirt"),
+    TSHIRTS(1, "tshirts", "T-Shirts"),
+    SHIRTS(2, "shirts", "Shirts"),
     PANTS(3, "pants", "Pants"),
     TRACK_PANTS(4, "track_pants", "Track Pants"),
     SHORTS(5, "shorts", "Shorts"),
-
     TOPS(6, "tops", "Tops"),
     LEGGINGS(7, "leggings", "Leggings"),
-    DRESSES(8, "dresses", "Dresses");
+    SAREES(8, "sarees", "Sarees"),
+    DRESSES(9, "dresses", "Dresses");;
 
     public final int code;
     public final String name;

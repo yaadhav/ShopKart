@@ -46,6 +46,9 @@ public class ProductEntity extends PrePersistenceEntity {
     @Column(precision = 2, scale = 1)
     private BigDecimal rating;
 
+    @Column(name = "ratingcount", nullable = false)
+    private Integer ratingCount;
+
     @Column(name = "brand")
     private Integer brand;
 
@@ -62,9 +65,6 @@ public class ProductEntity extends PrePersistenceEntity {
     private Integer size;
 
     private String image;
-
-    @Column(nullable = false)
-    private Integer stock;
 }
 
 

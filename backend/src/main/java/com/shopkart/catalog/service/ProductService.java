@@ -1,5 +1,6 @@
 package com.shopkart.catalog.service;
 
+import com.shopkart.catalog.dto.CreateProductRequest;
 import com.shopkart.catalog.dto.ProductEntity;
 import com.shopkart.catalog.model.ProductDTO;
 import com.shopkart.catalog.model.enums.Brand;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,28 +42,11 @@ public class ProductService {
 
         Specification<ProductEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.greaterThan(root.get(Entity.STOCK), 0));
             try {
-                if(paramMap.containsKey(Keys.FASHION_STYLE)) {
-                    int fashionStyleCode = FashionStyle.getCode(paramMap.get(Keys.FASHION_STYLE));
-                    predicates.add(cb.equal(root.get(Entity.FASHION_STYLE), fashionStyleCode));
-                }
-                if(paramMap.containsKey(Keys.CATEGORY)) {
-                    int categoryCode = Category.getCode(paramMap.get(Keys.CATEGORY));
-                    predicates.add(cb.equal(root.get(Entity.CATEGORY), categoryCode));
-                }
-                if(paramMap.containsKey(Keys.BRAND)) {
-                    int brandCode = Brand.getCode(paramMap.get(Keys.BRAND));
-                    predicates.add(cb.equal(root.get(Entity.BRAND), brandCode));
-                }
-                if(paramMap.containsKey(Keys.OCCASION)) {
-                    int occasionCode = Occasion.getCode(paramMap.get(Keys.OCCASION));
-                    predicates.add(cb.equal(root.get(Entity.OCCASION), occasionCode));
-                }
-                if(paramMap.containsKey(Keys.SIZE)) {
-                    int sizeCode = Size.getCode(paramMap.get(Keys.SIZE));
-                    predicates.add(cb.equal(root.get(Entity.SIZE), sizeCode));
-                }
+                addFilterPredicate(paramMap, Keys.BRAND, Entity.BRAND, Brand.class, root, cb, predicates);
+                addFilterPredicate(paramMap, Keys.CATEGORY, Entity.CATEGORY, Category.class, root, cb, predicates);
+                addFilterPredicate(paramMap, Keys.FASHION_STYLE, Entity.FASHION_STYLE, FashionStyle.class, root, cb, predicates);
+                addFilterPredicate(paramMap, Keys.OCCASION, Entity.OCCASION, Occasion.class, root, cb, predicates);
             } catch (IllegalArgumentException ex) {
                 throw CatalogExceptionStore.INVALID_FILTER.exception();
             }
@@ -69,6 +54,73 @@ public class ProductService {
         };
 
         return productRepo.findAll(spec, pageable).map(this::convertFromEntity);
+    }
+
+    private void addFilterPredicate(Map<String, String> paramMap, String paramKey, 
+            String entityField, Class<?> enumClass, jakarta.persistence.criteria.Root<ProductEntity> root, 
+            jakarta.persistence.criteria.CriteriaBuilder cb, List<Predicate> predicates) {
+        
+        for (String key : paramMap.keySet()) {
+            if (key.toLowerCase().startsWith(paramKey.toLowerCase() + ".")) {
+                String values = key.substring(key.indexOf(".") + 1);
+                String[] valueArray = values.split(",");
+                List<Integer> codes = new ArrayList<>();
+                
+                for (String value : valueArray) {
+                    value = value.trim();
+                    if (!value.isEmpty()) {
+                        int code = getEnumCode(enumClass, value);
+                        codes.add(code);
+                    }
+                }
+                
+                if (!codes.isEmpty()) {
+                    if (codes.size() == 1) {
+                        predicates.add(cb.equal(root.get(entityField), codes.get(0)));
+                    } else {
+                        predicates.add(root.get(entityField).in(codes));
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    private int getEnumCode(Class<?> enumClass, String name) {
+        try {
+            if (enumClass == Brand.class) return Brand.getCode(name);
+            if (enumClass == Category.class) return Category.getCode(name);
+            if (enumClass == FashionStyle.class) return FashionStyle.getCode(name);
+            if (enumClass == Occasion.class) return Occasion.getCode(name);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid filter value: " + name);
+        }
+        throw new IllegalArgumentException("Unknown enum class: " + enumClass.getName());
+    }
+
+    @Transactional
+    public ProductDTO createProduct(CreateProductRequest request) {
+        try {
+            ProductEntity entity = ProductEntity.builder()
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .sellingPrice(request.getSellingPrice())
+                    .originalPrice(request.getOriginalPrice())
+                    .discountPercentage(request.getDiscountPercentage())
+                    .rating(BigDecimal.ZERO)
+                    .ratingCount(0)
+                    .brand(Brand.getCode(request.getBrand()))
+                    .fashionStyle(FashionStyle.getCode(request.getFashionStyle()))
+                    .category(Category.getCode(request.getCategory()))
+                    .occasion(Occasion.getCode(request.getOccasion()))
+                    .size(Size.getCode(request.getSize()))
+                    .image(request.getImage())
+                    .build();
+            productRepo.save(entity);
+            return convertFromEntity(entity);
+        } catch (IllegalArgumentException ex) {
+            throw CatalogExceptionStore.INVALID_FILTER.exception();
+        }
     }
 
     private ProductDTO convertFromEntity(ProductEntity entity) {
@@ -80,13 +132,13 @@ public class ProductService {
             .originalPrice(entity.getOriginalPrice())
             .discountPercentage(entity.getDiscountPercentage())
             .rating(entity.getRating())
+            .ratingCount(entity.getRatingCount())
             .brand(Brand.getName(entity.getBrand()))
             .fashionStyle(FashionStyle.getName(entity.getFashionStyle()))
             .category(Category.getName(entity.getCategory()))
             .occasion(Occasion.getName(entity.getOccasion()))
             .size(Size.getName(entity.getSize()))
             .image(entity.getImage())
-            .stock(entity.getStock())
             .build();
     }
 }

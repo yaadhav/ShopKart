@@ -8,7 +8,8 @@ CREATE TABLE products (
     originalprice NUMERIC(12,2) NOT NULL,
     discountpercentage INTEGER DEFAULT 0 CHECK (discountpercentage >= 0 AND discountpercentage <= 100),
 
-    rating NUMERIC(2,1) CHECK (rating >= 1.0 AND rating <= 5.0),
+    rating NUMERIC(2,1) DEFAULT 0 CHECK (rating >= 0.0 AND rating <= 5.0),
+    ratingcount INTEGER NOT NULL DEFAULT 0,
 
     brand INTEGER NOT NULL,
     fashionstyle INTEGER NOT NULL,
@@ -17,8 +18,6 @@ CREATE TABLE products (
     size INTEGER NOT NULL,
 
     image VARCHAR(512),
-
-    stock INTEGER NOT NULL DEFAULT 0,
 
     createdtime BIGINT NOT NULL,
     updatedtime BIGINT NOT NULL
