@@ -26,7 +26,6 @@ public class ProductFormatHandler {
         formatted.put(Keys.CATEGORY + Keys.FORMATTED_SUFFIX, Category.getDisplayName(Category.getCode(product.getCategory())));
         formatted.put(Keys.FASHION_STYLE + Keys.FORMATTED_SUFFIX, FashionStyle.getDisplayName(FashionStyle.getCode(product.getFashionStyle())));
         formatted.put(Keys.OCCASION + Keys.FORMATTED_SUFFIX, Occasion.getDisplayName(Occasion.getCode(product.getOccasion())));
-        formatted.put(Keys.SIZE + Keys.FORMATTED_SUFFIX, Size.getDisplayName(Size.getCode(product.getSize())));
         return formatted;
     }
 }

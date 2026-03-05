@@ -11,7 +11,7 @@ public class ProductUtil {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put(CatalogConstants.Keys.PRODUCT_ID, product.getProductId());
         map.put(CatalogConstants.Keys.NAME, product.getName());
-        map.put(CatalogConstants.Keys.DESCRIPTION, product.getDescription());
+        map.put("tagline", product.getTagline());
         map.put(CatalogConstants.Keys.SELLING_PRICE, product.getSellingPrice());
         map.put(CatalogConstants.Keys.ORIGINAL_PRICE, product.getOriginalPrice());
         map.put(CatalogConstants.Keys.DISCOUNT_PERCENTAGE, product.getDiscountPercentage());
@@ -21,7 +21,6 @@ public class ProductUtil {
         map.put(CatalogConstants.Keys.FASHION_STYLE, product.getFashionStyle());
         map.put(CatalogConstants.Keys.CATEGORY, product.getCategory());
         map.put(CatalogConstants.Keys.OCCASION, product.getOccasion());
-        map.put(CatalogConstants.Keys.SIZE, product.getSize());
         map.put(CatalogConstants.Keys.IMAGE, product.getImage());
         map.putAll(ProductFormatHandler.addFormattedNodes(product));
         return map;

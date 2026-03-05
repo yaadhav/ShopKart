@@ -1,9 +1,11 @@
 package com.shopkart.catalog.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -12,8 +14,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateProductRequest {
@@ -21,8 +25,8 @@ public class CreateProductRequest {
     @NotBlank
     private String name;
 
-    @Size(max = 50)
-    private String description;
+    @Size(max = 100)
+    private String tagline;
 
     @NotNull @DecimalMin("0.01")
     private BigDecimal sellingPrice;
@@ -45,9 +49,12 @@ public class CreateProductRequest {
     @NotBlank
     private String occasion;
 
-    @NotBlank
-    private String size;
+    @Valid
+    private ProductDetailsRequest productDetails;
 
-    @Setter
-    private String image;
+    @NotEmpty
+    private Map<String, Integer> stock;
+
+    @NotEmpty
+    private List<String> images;
 }

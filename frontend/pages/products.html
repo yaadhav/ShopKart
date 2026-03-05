@@ -31,28 +31,35 @@
             <div class="filters-divider"></div>
 
             <div class="filter-section">
-                <h4 class="filter-section-title">Brand</h4>
-                <div id="filter-brand" class="filter-checkboxes"></div>
-            </div>
-
-            <div class="filter-section">
-                <h4 class="filter-section-title">Category</h4>
-                <div id="filter-category" class="filter-checkboxes"></div>
-            </div>
-
-            <div class="filter-section">
-                <h4 class="filter-section-title">Style</h4>
+                <div class="filter-section-header" onclick="toggleFilterSection('fashion_style')">
+                    <span class="filter-collapse-icon" id="collapse-icon-fashion_style">›</span>
+                    <h4 class="filter-section-title">Style</h4>
+                </div>
                 <div id="filter-fashion_style" class="filter-checkboxes"></div>
             </div>
 
             <div class="filter-section">
-                <h4 class="filter-section-title">Occasion</h4>
-                <div id="filter-occasion" class="filter-checkboxes"></div>
+                <div class="filter-section-header" onclick="toggleFilterSection('brand')">
+                    <span class="filter-collapse-icon" id="collapse-icon-brand">›</span>
+                    <h4 class="filter-section-title">Brand</h4>
+                </div>
+                <div id="filter-brand" class="filter-checkboxes"></div>
             </div>
 
             <div class="filter-section">
-                <h4 class="filter-section-title">Size</h4>
-                <div id="filter-size" class="filter-checkboxes"></div>
+                <div class="filter-section-header" onclick="toggleFilterSection('category')">
+                    <span class="filter-collapse-icon" id="collapse-icon-category">›</span>
+                    <h4 class="filter-section-title">Category</h4>
+                </div>
+                <div id="filter-category" class="filter-checkboxes"></div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('occasion')">
+                    <span class="filter-collapse-icon" id="collapse-icon-occasion">›</span>
+                    <h4 class="filter-section-title">Occasion</h4>
+                </div>
+                <div id="filter-occasion" class="filter-checkboxes"></div>
             </div>
         </aside>
 
@@ -112,7 +119,6 @@
                 populateFilterCheckboxes("filter-category", meta.categories, "category");
                 populateFilterCheckboxes("filter-fashion_style", meta.fashion_styles, "fashion_style");
                 populateFilterCheckboxes("filter-occasion", meta.occasions, "occasion");
-                populateFilterCheckboxes("filter-size", meta.sizes, "size");
 
                 const sortSelect = document.getElementById("f-sort_by");
                 meta.sortable_fields.forEach(item => {
@@ -132,6 +138,31 @@
             document.getElementById("f-page_size").value = "20";
             sortOrder = "asc";
             document.getElementById("sort-order-icon").textContent = "↑";
+            loadProducts(0);
+        }
+
+        function toggleFilterSection(filterKey) {
+            const checkboxContainer = document.getElementById(`filter-${filterKey}`);
+            const icon = document.getElementById(`collapse-icon-${filterKey}`);
+            
+            if (checkboxContainer.style.display === "none") {
+                checkboxContainer.style.display = "block";
+                icon.style.transform = "rotate(90deg)";
+            } else {
+                checkboxContainer.style.display = "none";
+                icon.style.transform = "rotate(0deg)";
+            }
+        }
+
+        function selectAllFilters(filterKey) {
+            const checkboxes = document.querySelectorAll(`#filter-${filterKey} input[type=checkbox]`);
+            checkboxes.forEach(cb => cb.checked = true);
+            loadProducts(0);
+        }
+
+        function clearFilterSection(filterKey) {
+            const checkboxes = document.querySelectorAll(`#filter-${filterKey} input[type=checkbox]`);
+            checkboxes.forEach(cb => cb.checked = false);
             loadProducts(0);
         }
 
@@ -186,12 +217,14 @@
                 ? `<img src="${imageUrl}" alt="${p.name}">`
                 : `<span class="placeholder">No image</span>`;
 
+            const tagline = p.tagline ? `<div class="product-card__tagline">${p.tagline}</div>` : '';
+
             return `
-                <div class="product-card">
+                <div class="product-card" onclick="viewProduct(${p.product_id})" style="cursor: pointer;">
                     <div class="product-card__image">${imageHtml}</div>
                     <div class="product-card__body">
                         <div class="product-card__name">${p.name}</div>
-                        <div class="product-card__desc">${p.description || ""}</div>
+                        ${tagline}
                         <div class="product-card__pricing">
                             <span class="product-card__price">${p.selling_price_formatted}</span>
                             ${p.original_price_formatted ? `<span class="product-card__original">${p.original_price_formatted}</span>` : ""}
@@ -203,6 +236,10 @@
                         </div>
                     </div>
                 </div>`;
+        }
+
+        function viewProduct(productId) {
+            window.location.href = `product-details.html?id=${productId}`;
         }
 
         function renderPagination(data) {

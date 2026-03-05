@@ -5,6 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel – ShopKart</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .stock-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stock-item label {
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .stock-item input {
+            padding: 6px 8px;
+            font-size: 14px;
+        }
+        .image-preview-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .image-preview {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-preview .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .details-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #eee;
+        }
+        .section-subtitle {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -50,16 +116,19 @@
             <div class="card">
                 <h3 class="section-title">Add Product</h3>
                 <form id="add-product-form">
+                    <!-- Basic Info -->
                     <div class="form-row">
                         <div class="form-group">
                             <label for="prod-name">Name *</label>
                             <input type="text" id="prod-name" placeholder="Product name" required>
                         </div>
                         <div class="form-group">
-                            <label for="prod-description">Description</label>
-                            <input type="text" id="prod-description" placeholder="Short description" maxlength="50">
+                            <label for="prod-tagline">Tagline</label>
+                            <input type="text" id="prod-tagline" placeholder="Short catchy phrase" maxlength="100">
                         </div>
                     </div>
+                    
+                    <!-- Pricing -->
                     <div class="form-row">
                         <div class="form-group">
                             <label for="prod-selling-price">Selling Price *</label>
@@ -74,7 +143,13 @@
                             <input type="number" id="prod-discount" placeholder="0" min="0" max="100" readonly>
                         </div>
                     </div>
+                    
+                    <!-- Categories -->
                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="prod-fashion-style">Style *</label>
+                            <select id="prod-fashion-style" required><option value="">Select</option></select>
+                        </div>
                         <div class="form-group">
                             <label for="prod-brand">Brand *</label>
                             <select id="prod-brand" required><option value="">Select</option></select>
@@ -83,35 +158,75 @@
                             <label for="prod-category">Category *</label>
                             <select id="prod-category" required><option value="">Select</option></select>
                         </div>
-                        <div class="form-group">
-                            <label for="prod-fashion-style">Style *</label>
-                            <select id="prod-fashion-style" required><option value="">Select</option></select>
-                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="prod-occasion">Occasion *</label>
                             <select id="prod-occasion" required><option value="">Select</option></select>
                         </div>
+                    </div>
+
+                    <!-- Product Details Section -->
+                    <div class="details-section">
+                        <h4 class="section-subtitle">Product Details</h4>
+                        
                         <div class="form-group">
-                            <label for="prod-size">Size *</label>
-                            <select id="prod-size" required><option value="">Select</option></select>
+                            <label for="prod-desc">Description</label>
+                            <textarea id="prod-desc" rows="4" placeholder="Detailed product description"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="prod-color">Color</label>
+                                <input type="text" id="prod-color" placeholder="e.g., Navy Blue" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-material">Material</label>
+                                <input type="text" id="prod-material" placeholder="e.g., 100% Cotton" maxlength="100">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="prod-length">Length</label>
+                                <input type="text" id="prod-length" placeholder="e.g., Regular" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-sleeve">Sleeve</label>
+                                <input type="text" id="prod-sleeve" placeholder="e.g., Short Sleeve" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-transparency">Transparency</label>
+                                <input type="text" id="prod-transparency" placeholder="e.g., Opaque" maxlength="50">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="prod-care">Care Instructions</label>
+                            <textarea id="prod-care" rows="3" placeholder="e.g., Machine wash cold, tumble dry low"></textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="prod-image">Product Image</label>
-                        <input type="file" id="prod-image" accept="image/jpeg,image/png,image/webp">
+
+                    <!-- Stock Section -->
+                    <div class="details-section">
+                        <h4 class="section-subtitle">Stock by Size *</h4>
+                        <div class="stock-grid" id="stock-grid"></div>
                     </div>
+
+                    <!-- Images Section -->
+                    <div class="details-section">
+                        <h4 class="section-subtitle">Product Images *</h4>
+                        <div class="form-group">
+                            <label for="prod-images">Upload Images (First image will be thumbnail)</label>
+                            <input type="file" id="prod-images" accept="image/jpeg,image/png,image/webp" multiple>
+                            <small>Select multiple images at once</small>
+                        </div>
+                        <div class="image-preview-container" id="image-preview-container"></div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Add Product</button>
                     <div id="product-msg" class="msg"></div>
                 </form>
-            </div>
-        </div>
-
-        <!-- Admin: Dashboard -->
-        <div id="admin-info-section" class="section" style="display:none;">
-            <div class="card">
-                <p>Welcome, Admin. You have elevated access to manage the platform.</p>
             </div>
         </div>
     </div>
@@ -136,6 +251,9 @@
             loadMeta();
         })();
 
+        let selectedImages = [];
+        let allSizes = [];
+
         async function loadMeta() {
             try {
                 const meta = await apiCall("/meta");
@@ -143,10 +261,27 @@
                 populateSelect("prod-category", meta.categories);
                 populateSelect("prod-fashion-style", meta.fashion_styles);
                 populateSelect("prod-occasion", meta.occasions);
-                populateSelect("prod-size", meta.sizes);
+                
+                // Store sizes for stock grid
+                allSizes = meta.sizes;
+                renderStockGrid();
             } catch (err) {
                 showMsg("product-msg", "Failed to load dropdown data", "error");
             }
+        }
+
+        function renderStockGrid() {
+            const grid = document.getElementById("stock-grid");
+            grid.innerHTML = '';
+            allSizes.forEach(size => {
+                const item = document.createElement("div");
+                item.className = "stock-item";
+                item.innerHTML = `
+                    <label for="stock-${size.name}">${size.display_name}</label>
+                    <input type="number" id="stock-${size.name}" data-size-name="${size.name}" min="0" value="0" placeholder="Qty">
+                `;
+                grid.appendChild(item);
+            });
         }
 
         function calculateDiscount() {
@@ -162,8 +297,60 @@
             }
         }
 
-        document.getElementById("prod-selling-price").addEventListener("input", calculateDiscount);
-        document.getElementById("prod-original-price").addEventListener("input", calculateDiscount);
+        function validatePrices() {
+            const sellingPrice = parseFloat(document.getElementById("prod-selling-price").value);
+            const originalPrice = parseFloat(document.getElementById("prod-original-price").value);
+            
+            if (sellingPrice && originalPrice) {
+                if (sellingPrice > originalPrice) {
+                    showMsg("product-msg", "Selling price cannot be higher than original price", "error");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        document.getElementById("prod-selling-price").addEventListener("input", () => {
+            calculateDiscount();
+            clearMsg("product-msg");
+        });
+        document.getElementById("prod-original-price").addEventListener("input", () => {
+            calculateDiscount();
+            clearMsg("product-msg");
+        });
+
+        // Handle multiple image selection
+        document.getElementById("prod-images").addEventListener("change", function(e) {
+            const files = Array.from(e.target.files);
+            selectedImages = [...selectedImages, ...files];
+            renderImagePreviews();
+        });
+
+        function renderImagePreviews() {
+            const container = document.getElementById("image-preview-container");
+            container.innerHTML = '';
+            
+            selectedImages.forEach((file, index) => {
+                const preview = document.createElement("div");
+                preview.className = "image-preview";
+                
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(file);
+                
+                const removeBtn = document.createElement("button");
+                removeBtn.className = "remove-btn";
+                removeBtn.innerHTML = "×";
+                removeBtn.type = "button";
+                removeBtn.onclick = () => {
+                    selectedImages.splice(index, 1);
+                    renderImagePreviews();
+                };
+                
+                preview.appendChild(img);
+                preview.appendChild(removeBtn);
+                container.appendChild(preview);
+            });
+        }
 
         document.getElementById("create-admin-form").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -192,41 +379,100 @@
             e.preventDefault();
             clearMsg("product-msg");
 
-            const productData = {
-                name: document.getElementById("prod-name").value,
-                description: document.getElementById("prod-description").value || null,
-                selling_price: parseFloat(document.getElementById("prod-selling-price").value),
-                original_price: parseFloat(document.getElementById("prod-original-price").value),
-                discount_percentage: parseInt(document.getElementById("prod-discount").value) || 0,
-                brand: document.getElementById("prod-brand").value,
-                fashion_style: document.getElementById("prod-fashion-style").value,
-                category: document.getElementById("prod-category").value,
-                occasion: document.getElementById("prod-occasion").value,
-                size: document.getElementById("prod-size").value,
-                image: null
-            };
+            // Validate prices
+            if (!validatePrices()) {
+                return;
+            }
 
-            const formData = new FormData();
-            formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
+            // Validate at least one image
+            if (selectedImages.length === 0) {
+                showMsg("product-msg", "At least one image is required", "error");
+                return;
+            }
 
-            const imageFile = document.getElementById("prod-image").files[0];
-            if (imageFile) {
-                formData.append("image", imageFile);
+            // Collect stock data
+            const stock = {};
+            let hasStock = false;
+            allSizes.forEach(size => {
+                const qty = parseInt(document.getElementById(`stock-${size.name}`).value) || 0;
+                if (qty > 0) {
+                    stock[size.name] = qty;
+                    hasStock = true;
+                }
+            });
+
+            if (!hasStock) {
+                showMsg("product-msg", "At least one size must have stock quantity", "error");
+                return;
             }
 
             try {
+                // Step 1: Upload all images first
+                showMsg("product-msg", "Uploading images...", "info");
+                const imageUrls = [];
+                for (const imageFile of selectedImages) {
+                    const formData = new FormData();
+                    formData.append("file", imageFile);
+                    
+                    const token = getToken();
+                    const res = await fetch(API + "/uploads", {
+                        method: "POST",
+                        headers: { "Authorization": "Bearer " + token },
+                        body: formData
+                    });
+                    
+                    if (!res.ok) throw new Error("Image upload failed");
+                    
+                    const data = await res.json();
+                    imageUrls.push(data.file_path || data.url);
+                }
+
+                // Step 2: Create product with details
+                showMsg("product-msg", "Creating product...", "info");
+                
+                const productData = {
+                    name: document.getElementById("prod-name").value,
+                    tagline: document.getElementById("prod-tagline").value || null,
+                    selling_price: parseFloat(document.getElementById("prod-selling-price").value),
+                    original_price: parseFloat(document.getElementById("prod-original-price").value),
+                    discount_percentage: parseInt(document.getElementById("prod-discount").value) || 0,
+                    brand: document.getElementById("prod-brand").value,
+                    fashion_style: document.getElementById("prod-fashion-style").value,
+                    category: document.getElementById("prod-category").value,
+                    occasion: document.getElementById("prod-occasion").value,
+                    product_details: {
+                        description: document.getElementById("prod-desc").value || null,
+                        color: document.getElementById("prod-color").value || null,
+                        material: document.getElementById("prod-material").value || null,
+                        length: document.getElementById("prod-length").value || null,
+                        sleeve: document.getElementById("prod-sleeve").value || null,
+                        transparency: document.getElementById("prod-transparency").value || null,
+                        care_instructions: document.getElementById("prod-care").value || null
+                    },
+                    stock: stock,
+                    images: imageUrls
+                };
+
                 const token = getToken();
                 const res = await fetch(API + "/products", {
                     method: "POST",
-                    headers: { "Authorization": "Bearer " + token },
-                    body: formData
+                    headers: { 
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(productData)
                 });
+                
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({ message: "Request failed" }));
                     throw new Error(err.message || "Error " + res.status);
                 }
-                showMsg("product-msg", "Product added successfully", "success");
+                
+                showMsg("product-msg", "Product added successfully!", "success");
                 document.getElementById("add-product-form").reset();
+                selectedImages = [];
+                renderImagePreviews();
+                renderStockGrid();
             } catch (err) {
                 showMsg("product-msg", err.message, "error");
             }

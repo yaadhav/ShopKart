@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 public class ProductDTO {
     private Long productId;
     private String name;
-    private String description;
+    private String tagline;
     private BigDecimal sellingPrice;
     private BigDecimal originalPrice;
     private Integer discountPercentage;
@@ -23,6 +23,5 @@ public class ProductDTO {
     private String fashionStyle;
     private String category;
     private String occasion;
-    private String size;
     private String image;
 }

@@ -31,8 +31,8 @@ public class ProductEntity extends PrePersistenceEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(length = 50)
-    private String description;
+    @Column(length = 100)
+    private String tagline;
 
     @Column(name = "sellingprice", nullable = false, precision = 19, scale = 2)
     private BigDecimal sellingPrice;
@@ -60,11 +60,5 @@ public class ProductEntity extends PrePersistenceEntity {
 
     @Column(name = "occasion")
     private Integer occasion;
-
-    @Column(name = "size")
-    private Integer size;
-
-    private String image;
 }
-
 

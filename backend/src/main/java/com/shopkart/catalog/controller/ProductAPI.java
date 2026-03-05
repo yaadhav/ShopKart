@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,11 +31,9 @@ import java.util.Map;
 public class ProductAPI {
 
     private final ProductService productService;
-    private final FileUploadService fileUploadService;
 
-    public ProductAPI(ProductService productService, FileUploadService fileUploadService) {
+    public ProductAPI(ProductService productService) {
         this.productService = productService;
-        this.fileUploadService = fileUploadService;
     }
 
     @GetMapping("")
@@ -45,16 +45,16 @@ public class ProductAPI {
         return ResponseEntity.ok(PagedResponse.from(page, items));
     }
 
-    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getProductDetails(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        Map<String, Object> details = productService.getProductDetails(id);
+        return ResponseEntity.ok(details);
+    }
+
+    @PostMapping("")
     @PreAuthorize("hasAnyRole('admin', 'owner')")
     public ResponseEntity<Map<String, Object>> createProduct(
-            @RequestPart("product") @Valid CreateProductRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
-
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String fileName = fileUploadService.store(imageFile);
-            request.setImage("/uploads/" + fileName);
-        }
+            @RequestBody @Valid CreateProductRequest request) {
 
         ProductDTO product = productService.createProduct(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ProductUtil.toResponse(product));

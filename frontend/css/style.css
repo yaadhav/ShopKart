@@ -319,11 +319,34 @@ a:hover { text-decoration: underline; }
 .filter-section {
     margin-bottom: 28px;
 }
+
+.filter-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0;
+    margin-bottom: 12px;
+}
+
+.filter-section-header:hover .filter-section-title {
+    color: var(--color-accent);
+}
+
+.filter-collapse-icon {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--color-text);
+    line-height: 1;
+    transition: transform 0.2s;
+    transform: rotate(90deg);
+}
+
 .filter-section-title {
     font-size: 14px;
     font-weight: 700;
-    margin-bottom: 12px;
-    margin-top: 0;
+    margin: 0;
     color: var(--color-text);
 }
 .filter-checkboxes {
@@ -423,6 +446,15 @@ a:hover { text-decoration: underline; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.product-card__tagline {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-style: italic;
 }
 .product-card__desc {
     font-size: 11px;

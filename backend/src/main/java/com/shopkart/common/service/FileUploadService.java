@@ -14,7 +14,7 @@ import java.util.UUID;
 @Service
 public class FileUploadService {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png");
 
     private final Path uploadDir;
 
@@ -29,7 +29,7 @@ public class FileUploadService {
 
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            throw new IllegalArgumentException("Only JPEG, PNG and WebP images are allowed");
+            throw new IllegalArgumentException("Only JPEG and PNG images are allowed");
         }
 
         String extension = getExtension(file.getOriginalFilename());
