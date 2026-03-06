@@ -1,17 +1,16 @@
 package com.shopkart.catalog.util;
 
-import com.shopkart.catalog.model.ProductDTO;
-import com.shopkart.catalog.service.ProductFormatHandler;
+import com.shopkart.catalog.dto.response.ProductResponse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ProductUtil {
-    public static Map<String, Object> toResponse(ProductDTO product) {
+    public static Map<String, Object> toResponse(ProductResponse product) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put(CatalogConstants.Keys.PRODUCT_ID, product.getProductId());
         map.put(CatalogConstants.Keys.NAME, product.getName());
-        map.put("tagline", product.getTagline());
+        map.put(CatalogConstants.Keys.TAG_LINE, product.getTagline());
         map.put(CatalogConstants.Keys.SELLING_PRICE, product.getSellingPrice());
         map.put(CatalogConstants.Keys.ORIGINAL_PRICE, product.getOriginalPrice());
         map.put(CatalogConstants.Keys.DISCOUNT_PERCENTAGE, product.getDiscountPercentage());

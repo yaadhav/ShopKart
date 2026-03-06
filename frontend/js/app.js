@@ -47,8 +47,8 @@ function updateNav() {
             `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}${roleLabel}</a>`;
     } else {
         links.innerHTML =
-            `<a href="${BASE}/pages/login.html">Login</a>` +
-            `<a href="${BASE}/pages/register.html">Register</a>`;
+            `<a href="${BASE}/pages/products.html">Products</a>` +
+            `<a href="${BASE}/pages/login.html" class="nav-link guest-link">Guest</a>`;
     }
 }
 
@@ -64,11 +64,15 @@ async function apiCall(path, options = {}) {
         logout();
         return;
     }
+
+    const text = await res.text();
+
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Request failed" }));
+        const err = text ? JSON.parse(text) : { message: "Request failed" };
         throw new Error(err.message || `Error ${res.status}`);
     }
-    return res.json();
+
+    return text ? JSON.parse(text) : null;
 }
 
 /* ── DOM helpers ──────────────────────────────── */

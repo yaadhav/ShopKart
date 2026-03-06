@@ -1,12 +1,12 @@
 package com.shopkart.catalog.controller;
 
-import com.shopkart.catalog.dto.MetaItem;
-import com.shopkart.catalog.dto.MetaResponse;
-import com.shopkart.catalog.model.enums.Brand;
-import com.shopkart.catalog.model.enums.Category;
-import com.shopkart.catalog.model.enums.FashionStyle;
-import com.shopkart.catalog.model.enums.Occasion;
-import com.shopkart.catalog.model.enums.Size;
+import com.shopkart.catalog.dto.resource.MetaItem;
+import com.shopkart.catalog.dto.response.MetaResponse;
+import com.shopkart.catalog.dto.enums.Brand;
+import com.shopkart.catalog.dto.enums.Category;
+import com.shopkart.catalog.dto.enums.FashionStyle;
+import com.shopkart.catalog.dto.enums.Occasion;
+import com.shopkart.catalog.dto.enums.Size;
 import com.shopkart.catalog.util.CatalogConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

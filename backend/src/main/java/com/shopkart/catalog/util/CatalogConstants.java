@@ -11,19 +11,17 @@ public final class CatalogConstants {
         public static final String NAME = "name";
         public static final String SELLING_PRICE = "sellingPrice";
         public static final String RATING = "rating";
-        public static final String RATING_COUNT = "ratingCount";
         public static final String DISCOUNT_PERCENTAGE = "discountPercentage";
         public static final String FASHION_STYLE = "fashionStyle";
         public static final String CATEGORY = "category";
         public static final String BRAND = "brand";
         public static final String OCCASION = "occasion";
-        public static final String SIZE = "size";
     }
 
     public static final class Keys {
         public static final String PRODUCT_ID = "product_id";
         public static final String NAME = "name";
-        public static final String DESCRIPTION = "description";
+        public static final String TAG_LINE = "tag_line";
         public static final String SELLING_PRICE = "selling_price";
         public static final String ORIGINAL_PRICE = "original_price";
         public static final String DISCOUNT_PERCENTAGE = "discount_percentage";
@@ -33,7 +31,6 @@ public final class CatalogConstants {
         public static final String FASHION_STYLE = "fashion_style";
         public static final String CATEGORY = "category";
         public static final String OCCASION = "occasion";
-        public static final String SIZE = "size";
         public static final String IMAGE = "image";
         public static final String FORMATTED_SUFFIX = "_formatted";
     }

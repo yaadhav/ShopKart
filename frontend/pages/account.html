@@ -12,11 +12,14 @@
         <div class="navbar-links" id="auth-links"></div>
     </nav>
 
-    <div class="container container--narrow">
+    <div class="container">
         <div class="page-header">
             <h1>My Account</h1>
         </div>
-        <div class="card">
+
+        <!-- Basic Account Info -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; margin-bottom: 16px; font-weight: 600;">Account Information</h2>
             <div class="info-row">
                 <span class="info-label">Name</span>
                 <span class="info-value" id="user-name">–</span>
@@ -25,20 +28,137 @@
                 <span class="info-label">Email</span>
                 <span class="info-value" id="user-email">–</span>
             </div>
-            <div style="margin-top: 24px; text-align: right;">
-                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            <div style="margin-top: 24px; text-align: center;">
+                <button class="btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- User Details Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 600;">Personal Details</h2>
+                <button class="btn btn-secondary" onclick="openUserDetailsForm()" id="edit-details-btn">Edit</button>
+            </div>
+            
+            <div id="user-details-display">
+                <div class="info-row">
+                    <span class="info-label">Phone Number</span>
+                    <span class="info-value" id="display-phone">Not provided</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Gender</span>
+                    <span class="info-value" id="display-gender">Not specified</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date of Birth</span>
+                    <span class="info-value" id="display-dob">Not provided</span>
+                </div>
+            </div>
+
+            <!-- User Details Form (initially hidden) -->
+            <div id="user-details-form" style="display: none;">
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 600; color: #333; font-size: 14px;">+91</span>
+                        <input type="tel" id="phone-number" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="gender">
+                        <option value="0">Not specified</option>
+                        <option value="1">Male</option>
+                        <option value="2">Female</option>
+                        <option value="3">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="date-of-birth">
+                </div>
+                <div id="user-details-msg" class="msg"></div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="saveUserDetails()">Save</button>
+                    <button class="btn btn-secondary" onclick="cancelUserDetailsForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Addresses Section -->
+        <div class="card" id="addresses-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 600;">Saved Addresses</h2>
+                <button class="btn btn-primary" onclick="openAddressModal()">Add New Address</button>
+            </div>
+            
+            <div id="addresses-list">
+                <p style="text-align: center; color: var(--color-text-secondary); padding: 24px;">Loading addresses...</p>
             </div>
         </div>
     </div>
 
-    <script src="../js/app.js"></script>
-    <script>
-        if (!requireAuth()) { /* redirects */ }
-        const user = getUser();
-        if (user) {
-            document.getElementById("user-name").textContent = user.name;
-            document.getElementById("user-email").textContent = user.email;
-        }
-    </script>
+    <!-- Address Modal -->
+    <div id="address-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Address</h2>
+                <span class="modal-close" onclick="closeAddressModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Name <span style="color: var(--color-error);">*</span></label>
+                    <input type="text" id="addr-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Contact Number <span style="color: var(--color-error);">*</span></label>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 600; color: #333; font-size: 14px;">+91</span>
+                        <input type="tel" id="addr-contact" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address Line 1 <span style="color: var(--color-error);">*</span></label>
+                    <input type="text" id="addr-line1" required>
+                </div>
+                <div class="form-group">
+                    <label>Address Line 2 <span style="color: var(--color-error);">*</span></label>
+                    <input type="text" id="addr-line2" required>
+                </div>
+                <div class="form-group">
+                    <label>Landmark</label>
+                    <input type="text" id="addr-landmark">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City <span style="color: var(--color-error);">*</span></label>
+                        <input type="text" id="addr-city" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State <span style="color: var(--color-error);">*</span></label>
+                        <input type="text" id="addr-state" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Pincode <span style="color: var(--color-error);">*</span></label>
+                    <input type="text" id="addr-pincode" placeholder="6 digits" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="addr-default" style="width: auto;">
+                        <span>Set as default address</span>
+                    </label>
+                </div>
+                <div id="address-modal-msg" class="msg"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveAddress()">Save Address</button>
+                <button class="btn btn-secondary" onclick="closeAddressModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js?v=2"></script>
+    <script src="../js/account.js?v=2"></script>
 </body>
 </html>

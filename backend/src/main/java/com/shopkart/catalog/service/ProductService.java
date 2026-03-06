@@ -1,14 +1,20 @@
 package com.shopkart.catalog.service;
 
-import com.shopkart.catalog.dto.CreateProductRequest;
-import com.shopkart.catalog.dto.ProductEntity;
-import com.shopkart.catalog.model.ProductDTO;
-import com.shopkart.catalog.model.enums.Brand;
-import com.shopkart.catalog.model.enums.Category;
-import com.shopkart.catalog.model.enums.FashionStyle;
-import com.shopkart.catalog.model.enums.Occasion;
-import com.shopkart.catalog.model.enums.Size;
+import com.shopkart.catalog.dto.request.CreateProductRequest;
+import com.shopkart.catalog.model.ProductDetailsEntity;
+import com.shopkart.catalog.model.ProductEntity;
+import com.shopkart.catalog.dto.response.ProductResponse;
+import com.shopkart.catalog.model.ProductImageEntity;
+import com.shopkart.catalog.model.ProductStockEntity;
+import com.shopkart.catalog.dto.enums.Brand;
+import com.shopkart.catalog.dto.enums.Category;
+import com.shopkart.catalog.dto.enums.FashionStyle;
+import com.shopkart.catalog.dto.enums.Occasion;
+import com.shopkart.catalog.dto.enums.Size;
+import com.shopkart.catalog.repo.ProductDetailsRepo;
+import com.shopkart.catalog.repo.ProductImageRepo;
 import com.shopkart.catalog.repo.ProductRepo;
+import com.shopkart.catalog.repo.ProductStockRepo;
 import com.shopkart.catalog.util.CatalogConstants;
 import com.shopkart.catalog.util.CatalogConstants.Entity;
 import com.shopkart.catalog.util.CatalogConstants.Keys;
@@ -32,21 +38,21 @@ import java.util.Map;
 public class ProductService {
 
     private final ProductRepo productRepo;
-    private final com.shopkart.catalog.repository.ProductDetailsRepo productDetailsRepo;
-    private final com.shopkart.catalog.repository.ProductImageRepo productImageRepo;
-    private final com.shopkart.catalog.repository.ProductStockRepo productStockRepo;
+    private final ProductDetailsRepo productDetailsRepo;
+    private final ProductImageRepo productImageRepo;
+    private final ProductStockRepo productStockRepo;
 
     public ProductService(ProductRepo productRepo, 
-            com.shopkart.catalog.repository.ProductDetailsRepo productDetailsRepo,
-            com.shopkart.catalog.repository.ProductImageRepo productImageRepo,
-            com.shopkart.catalog.repository.ProductStockRepo productStockRepo) {
+            ProductDetailsRepo productDetailsRepo,
+            ProductImageRepo productImageRepo,
+            ProductStockRepo productStockRepo) {
         this.productRepo = productRepo;
         this.productDetailsRepo = productDetailsRepo;
         this.productImageRepo = productImageRepo;
         this.productStockRepo = productStockRepo;
     }
 
-    public Page<ProductDTO> getProducts(Map<String, String> paramMap) {
+    public Page<ProductResponse> getProducts(Map<String, String> paramMap) {
         Pageable pageable = PageRequestBuilder.build(paramMap, CatalogConstants.DEFAULT_SORT_KEY, CatalogConstants.SORT_FIELD_MAP);
 
         Specification<ProductEntity> spec = (root, query, cb) -> {
@@ -108,9 +114,8 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDTO createProduct(CreateProductRequest request) {
+    public ProductResponse createProduct(CreateProductRequest request) {
         try {
-            // Create main product entity
             ProductEntity entity = ProductEntity.builder()
                     .name(request.getName())
                     .tagline(request.getTagline())
@@ -127,11 +132,10 @@ public class ProductService {
             productRepo.save(entity);
             
             Long productId = entity.getProductId();
-            
-            // Create product details if provided
+
             if (request.getProductDetails() != null) {
                 var detailsRequest = request.getProductDetails();
-                var detailsEntity = com.shopkart.catalog.dto.ProductDetailsEntity.builder()
+                var detailsEntity = ProductDetailsEntity.builder()
                         .productId(productId)
                         .description(detailsRequest.getDescription())
                         .color(detailsRequest.getColor())
@@ -148,15 +152,14 @@ public class ProductService {
                         .build();
                 productDetailsRepo.save(detailsEntity);
             }
-            
-            // Create product stock entries
+
             if (request.getStock() != null && !request.getStock().isEmpty()) {
                 for (Map.Entry<String, Integer> entry : request.getStock().entrySet()) {
                     String sizeName = entry.getKey();
                     Integer quantity = entry.getValue();
                     int sizeCode = Size.getCode(sizeName);
                     
-                    var stockEntity = com.shopkart.catalog.dto.ProductStockEntity.builder()
+                    var stockEntity = ProductStockEntity.builder()
                             .productId(productId)
                             .size(sizeCode)
                             .quantity(quantity)
@@ -164,13 +167,12 @@ public class ProductService {
                     productStockRepo.save(stockEntity);
                 }
             }
-            
-            // Create product images
+
             if (request.getImages() != null && !request.getImages().isEmpty()) {
                 long currentTime = System.currentTimeMillis();
                 for (int i = 0; i < request.getImages().size(); i++) {
                     String imageUrl = request.getImages().get(i);
-                    var imageEntity = com.shopkart.catalog.dto.ProductImageEntity.builder()
+                    var imageEntity = ProductImageEntity.builder()
                             .productId(productId)
                             .imageUrl(imageUrl)
                             .isThumbnail(i == 0)
@@ -187,14 +189,13 @@ public class ProductService {
         }
     }
 
-    private ProductDTO convertFromEntity(ProductEntity entity) {
-        // Fetch thumbnail image
+    private ProductResponse convertFromEntity(ProductEntity entity) {
         String thumbnailUrl = productImageRepo
                 .findByProductIdAndIsThumbnail(entity.getProductId(), true)
-                .map(com.shopkart.catalog.dto.ProductImageEntity::getImageUrl)
+                .map(ProductImageEntity::getImageUrl)
                 .orElse(null);
         
-        return ProductDTO.builder()
+        return ProductResponse.builder()
             .productId(entity.getProductId())
             .name(entity.getName())
             .tagline(entity.getTagline())
@@ -212,33 +213,28 @@ public class ProductService {
     }
     
     public Map<String, Object> getProductDetails(Long productId) {
-        // Fetch product entity
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> CatalogExceptionStore.PRODUCT_NOT_FOUND.exception());
-        
-        // Fetch product details
-        com.shopkart.catalog.dto.ProductDetailsEntity details = productDetailsRepo
+
+        ProductDetailsEntity details = productDetailsRepo
                 .findByProductId(productId)
                 .orElse(null);
-        
-        // Fetch all images ordered by display order
+
         List<String> images = productImageRepo.findByProductIdOrderByDisplayOrder(productId)
                 .stream()
-                .map(com.shopkart.catalog.dto.ProductImageEntity::getImageUrl)
+                .map(ProductImageEntity::getImageUrl)
                 .toList();
-        
-        // Fetch stock by size
+
         Map<String, Integer> stock = new java.util.LinkedHashMap<>();
         productStockRepo.findByProductId(productId).forEach(stockEntity -> {
             String sizeName = Size.getName(stockEntity.getSize());
             stock.put(sizeName, stockEntity.getQuantity());
         });
-        
-        // Build response
+
         Map<String, Object> response = new java.util.LinkedHashMap<>();
         response.put(Keys.PRODUCT_ID, product.getProductId());
         response.put(Keys.NAME, product.getName());
-        response.put("tagline", product.getTagline());
+        response.put(Keys.TAG_LINE, product.getTagline());
         response.put(Keys.SELLING_PRICE, product.getSellingPrice());
         response.put(Keys.ORIGINAL_PRICE, product.getOriginalPrice());
         response.put(Keys.DISCOUNT_PERCENTAGE, product.getDiscountPercentage());
@@ -248,8 +244,7 @@ public class ProductService {
         response.put(Keys.FASHION_STYLE, FashionStyle.getName(product.getFashionStyle()));
         response.put(Keys.CATEGORY, Category.getName(product.getCategory()));
         response.put(Keys.OCCASION, Occasion.getName(product.getOccasion()));
-        
-        // Add details if present
+
         if (details != null) {
             Map<String, Object> detailsMap = new java.util.LinkedHashMap<>();
             detailsMap.put("description", details.getDescription());
@@ -259,16 +254,14 @@ public class ProductService {
             detailsMap.put("sleeve", details.getSleeve());
             detailsMap.put("transparency", details.getTransparency());
             detailsMap.put("care_instructions", details.getCareInstructions());
-            
-            // Add rating breakdown
+
             Map<String, Integer> ratingBreakdown = new java.util.LinkedHashMap<>();
             ratingBreakdown.put("5_star", details.getRating5Star());
             ratingBreakdown.put("4_star", details.getRating4Star());
             ratingBreakdown.put("3_star", details.getRating3Star());
             ratingBreakdown.put("2_star", details.getRating2Star());
             ratingBreakdown.put("1_star", details.getRating1Star());
-            
-            // Calculate and add total_count
+
             int totalCount = details.getRating5Star() + details.getRating4Star() + 
                            details.getRating3Star() + details.getRating2Star() + 
                            details.getRating1Star();

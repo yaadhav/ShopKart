@@ -482,7 +482,7 @@
 
     <script src="../js/app.js"></script>
     <script>
-        if (!requireAuth()) { /* redirects */ }
+        // Product details page is public - no auth required
 
         const productId = new URLSearchParams(window.location.search).get('id');
         if (!productId) {
@@ -685,6 +685,10 @@
 
         // Dummy button handlers
         function addToCart() {
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
             if (!selectedSize) {
                 alert('Please select a size');
                 return;
@@ -693,6 +697,10 @@
         }
 
         function buyNow() {
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
             if (!selectedSize) {
                 alert('Please select a size');
                 return;
@@ -701,6 +709,10 @@
         }
 
         function toggleFavorite() {
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
             const heartIcon = document.getElementById('heart-icon');
             const isFilled = heartIcon.classList.contains('filled');
             

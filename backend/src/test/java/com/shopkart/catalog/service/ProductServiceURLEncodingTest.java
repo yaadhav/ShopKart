@@ -1,6 +1,6 @@
 package com.shopkart.catalog.service;
 
-import com.shopkart.catalog.model.ProductDTO;
+import com.shopkart.catalog.dto.response.ProductResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +27,7 @@ public class ProductServiceURLEncodingTest {
         params.put("page", "0");
         params.put("page_size", "20");
         
-        Page<ProductDTO> result = productService.getProducts(params);
+        Page<ProductResponse> result = productService.getProducts(params);
         assertNotNull(result);
         
         // Verify we get products with either brand

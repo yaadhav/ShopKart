@@ -1,8 +1,6 @@
 package com.shopkart.catalog.service;
 
-import com.shopkart.catalog.dto.ProductEntity;
-import com.shopkart.catalog.model.ProductDTO;
-import com.shopkart.catalog.repo.ProductRepo;
+import com.shopkart.catalog.dto.response.ProductResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,7 +24,7 @@ public class ProductServiceMultiFilterTest {
         params.put("page", "0");
         params.put("page_size", "20");
         
-        Page<ProductDTO> result = productService.getProducts(params);
+        Page<ProductResponse> result = productService.getProducts(params);
         assertNotNull(result);
         
         // All results should have brand zenfit or urbanedge
@@ -44,7 +42,7 @@ public class ProductServiceMultiFilterTest {
         params.put("page", "0");
         params.put("page_size", "20");
         
-        Page<ProductDTO> result = productService.getProducts(params);
+        Page<ProductResponse> result = productService.getProducts(params);
         assertNotNull(result);
         
         // All results should have brand zenfit
@@ -62,7 +60,7 @@ public class ProductServiceMultiFilterTest {
         params.put("page", "0");
         params.put("page_size", "20");
         
-        Page<ProductDTO> result = productService.getProducts(params);
+        Page<ProductResponse> result = productService.getProducts(params);
         assertNotNull(result);
         
         // All results should match both filters
