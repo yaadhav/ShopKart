@@ -1,12 +1,11 @@
-package com.shopkart.common.util;
+package com.shopkart.user.util;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 public class AuthUtil {
-
-    public static Long getUserIdFromAuth() {
+    public static Long getUserIdFromJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
             throw new IllegalStateException("No valid authentication found");

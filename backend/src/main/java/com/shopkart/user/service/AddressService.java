@@ -61,14 +61,14 @@ public class AddressService {
 
     public AddressResponse getAddress(Long userId, Long addressId) {
         AddressEntity address = addressRepo.findByAddressIdAndUserId(addressId, userId)
-                .orElseThrow(() -> UserExceptionStore.ADDRESS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
         return mapToResponse(address);
     }
 
     @Transactional
     public AddressResponse updateAddress(Long userId, Long addressId, AddressRequest request) {
         AddressEntity address = addressRepo.findByAddressIdAndUserId(addressId, userId)
-                .orElseThrow(() -> UserExceptionStore.ADDRESS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
 
         if (Boolean.TRUE.equals(request.getIsDefault()) && !address.getIsDefault()) {
             addressRepo.unsetDefaultAddressForUser(userId);
@@ -92,14 +92,14 @@ public class AddressService {
     @Transactional
     public void deleteAddress(Long userId, Long addressId) {
         AddressEntity address = addressRepo.findByAddressIdAndUserId(addressId, userId)
-                .orElseThrow(() -> UserExceptionStore.ADDRESS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
         addressRepo.delete(address);
     }
 
     @Transactional
     public AddressResponse setDefaultAddress(Long userId, Long addressId) {
         AddressEntity address = addressRepo.findByAddressIdAndUserId(addressId, userId)
-                .orElseThrow(() -> UserExceptionStore.ADDRESS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
 
         addressRepo.unsetDefaultAddressForUser(userId);
 
@@ -111,7 +111,7 @@ public class AddressService {
 
     public AddressResponse getDefaultAddress(Long userId) {
         AddressEntity address = addressRepo.findByUserIdAndIsDefaultTrue(userId)
-                .orElseThrow(() -> UserExceptionStore.ADDRESS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
         return mapToResponse(address);
     }
 

@@ -1,9 +1,9 @@
 package com.shopkart.user.controller;
 
-import com.shopkart.common.util.AuthUtil;
 import com.shopkart.user.dto.request.AddressRequest;
 import com.shopkart.user.dto.response.AddressResponse;
 import com.shopkart.user.service.AddressService;
+import com.shopkart.user.util.AuthUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,21 +30,21 @@ public class AddressAPI {
 
     @PostMapping
     public ResponseEntity<AddressResponse> createAddress(@Valid @RequestBody AddressRequest request) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         AddressResponse response = addressService.createAddress(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<List<AddressResponse>> getUserAddresses() {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         List<AddressResponse> addresses = addressService.getUserAddresses(userId);
         return ResponseEntity.ok(addresses);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AddressResponse> getAddress(@PathVariable("id") Long addressId) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         AddressResponse response = addressService.getAddress(userId, addressId);
         return ResponseEntity.ok(response);
     }
@@ -53,28 +53,28 @@ public class AddressAPI {
     public ResponseEntity<AddressResponse> updateAddress(
             @PathVariable("id") Long addressId,
             @Valid @RequestBody AddressRequest request) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         AddressResponse response = addressService.updateAddress(userId, addressId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAddress(@PathVariable("id") Long addressId) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         addressService.deleteAddress(userId, addressId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/default")
     public ResponseEntity<AddressResponse> setDefaultAddress(@PathVariable("id") Long addressId) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         AddressResponse response = addressService.setDefaultAddress(userId, addressId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/default")
     public ResponseEntity<AddressResponse> getDefaultAddress() {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         AddressResponse response = addressService.getDefaultAddress(userId);
         return ResponseEntity.ok(response);
     }

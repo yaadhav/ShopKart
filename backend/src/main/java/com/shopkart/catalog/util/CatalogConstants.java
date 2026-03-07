@@ -31,6 +31,7 @@ public final class CatalogConstants {
         public static final String FASHION_STYLE = "fashion_style";
         public static final String CATEGORY = "category";
         public static final String OCCASION = "occasion";
+        public static final String SIZE = "size";
         public static final String IMAGE = "image";
         public static final String FORMATTED_SUFFIX = "_formatted";
         public static final String DESCRIPTION = "description";
@@ -47,6 +48,7 @@ public final class CatalogConstants {
         public static final String STAR_2 = "2_star";
         public static final String STAR_1 = "1_star";
         public static final String TOTAL_COUNT = "total_count";
+        public static final String QUANTITY = "quantity";
         public static final String DETAILS = "details";
         public static final String IMAGES = "images";
         public static final String STOCK = "stock";

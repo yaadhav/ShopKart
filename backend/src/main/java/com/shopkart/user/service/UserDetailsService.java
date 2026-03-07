@@ -43,7 +43,7 @@ public class UserDetailsService {
 
     public UserDetailsResponse getUserDetails(Long userId) {
         UserDetailsEntity userDetails = userDetailsRepo.findByUserId(userId)
-                .orElseThrow(() -> UserExceptionStore.USER_DETAILS_NOT_FOUND.exception());
+                .orElseThrow(UserExceptionStore.USER_DETAILS_NOT_FOUND::exception);
         return mapToResponse(userDetails);
     }
 

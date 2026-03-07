@@ -12,7 +12,8 @@ public enum CartExceptionStore implements ExceptionStore {
     PRODUCT_ALREADY_IN_WISHLIST(HttpStatus.CONFLICT, "CART_002", "Product already in wishlist"),
     WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_003", "Wishlist item not found"),
     CART_ITEM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CART_004", "Access denied to cart item"),
-    WISHLIST_ITEM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CART_005", "Access denied to wishlist item");
+    WISHLIST_ITEM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CART_005", "Access denied to wishlist item"),
+    QUANTITY_EXCEEDS_STOCK(HttpStatus.BAD_REQUEST, "CART_006", "Requested quantity exceeds available stock");
 
     private final HttpStatus status;
     private final String errorCode;

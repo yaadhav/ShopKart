@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 900px) { .wishlist-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .wishlist-grid { grid-template-columns: 1fr; } }
+        .wishlist-card {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .wishlist-card__image {
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        .wishlist-card__image img { width: 100%; height: 100%; object-fit: cover; }
+        .wishlist-card__body { padding: 12px; }
+        .wishlist-card__name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .wishlist-card__pricing { margin-bottom: 8px; }
+        .wishlist-card__price { font-weight: 700; font-size: 15px; margin-right: 6px; }
+        .wishlist-card__original { text-decoration: line-through; color: #888; font-size: 13px; margin-right: 6px; }
+        .wishlist-card__discount { color: #27ae60; font-size: 13px; font-weight: 600; }
+        .wishlist-card__footer { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .wishlist-card__actions { display: flex; gap: 8px; }
+        .wishlist-card__actions button { flex: 1; padding: 8px; font-size: 13px; font-weight: 600; border-radius: 4px; cursor: pointer; border: 1px solid #333; }
+        .btn-move-cart { background: #333; color: #fff; }
+        .btn-move-cart:hover { background: #555; }
+        .btn-remove { background: #fff; color: #333; }
+        .btn-remove:hover { background: #f5f5f5; }
+        .empty-state { text-align: center; padding: 80px 20px; color: #888; }
+        .empty-state h2 { margin-bottom: 12px; color: #333; }
+        .empty-state a { color: #333; font-weight: 600; text-decoration: underline; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: #fff; border-radius: 8px; padding: 28px; min-width: 280px; max-width: 360px; width: 100%; }
+        .modal-box h3 { margin: 0 0 16px; font-size: 16px; }
+        .modal-box select { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 8px; }
+        .modal-actions button { flex: 1; padding: 9px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #333; font-weight: 600; }
+        .btn-confirm { background: #333; color: #fff; }
+        .btn-confirm:hover { background: #555; }
+        .btn-cancel { background: #fff; color: #333; }
+        .btn-cancel:hover { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--wide">
+        <div class="page-header">
+            <h1>My Wishlist</h1>
+        </div>
+        <div id="msg-area"></div>
+        <div id="wishlist-content">
+            <p style="color:#888;">Loading wishlist...</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="size-modal">
+        <div class="modal-box">
+            <h3>Select Size</h3>
+            <select id="size-select"></select>
+            <div class="modal-actions">
+                <button class="btn-confirm" onclick="confirmMoveToCart()">Move to Cart</button>
+                <button class="btn-cancel" onclick="closeSizeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let sizes = [];
+        let pendingWishlistId = null;
+        let pendingProductId = null;
+
+        async function init() {
+            if (!requireAuth()) return;
+            await loadSizes();
+            await loadWishlist();
+        }
+
+        async function loadSizes() {
+            try {
+                const meta = await apiCall('/products/meta');
+                sizes = meta.sizes || [];
+                const select = document.getElementById('size-select');
+                select.innerHTML = '';
+                sizes.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.name;
+                    opt.textContent = s.display_name;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                sizes = [];
+            }
+        }
+
+        async function loadWishlist() {
+            try {
+                const items = await apiCall('/wishlist');
+                renderWishlist(items);
+            } catch (e) {
+                document.getElementById('wishlist-content').innerHTML =
+                    `<div class="empty-state"><h2>Failed to load wishlist</h2><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderWishlist(items) {
+            const container = document.getElementById('wishlist-content');
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Your wishlist is empty</h2>
+                        <p>Save items you love and find them here.</p>
+                        <a href="products.html">Browse Products</a>
+                    </div>`;
+                return;
+            }
+            container.innerHTML = `<div class="wishlist-grid">${items.map(buildCard).join('')}</div>`;
+        }
+
+        function buildCard(p) {
+            const imageUrl = p.image ? SERVER + p.image : null;
+            const imageHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${p.name}">`
+                : `<span class="placeholder">No image</span>`;
+            return `
+                <div class="wishlist-card">
+                    <div class="wishlist-card__image">${imageHtml}</div>
+                    <div class="wishlist-card__body">
+                        <div class="wishlist-card__name">${p.name}</div>
+                        <div class="wishlist-card__pricing">
+                            <span class="wishlist-card__price">${p.selling_price_formatted}</span>
+                            ${p.original_price_formatted ? `<span class="wishlist-card__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.discount_percentage_formatted ? `<span class="wishlist-card__discount">${p.discount_percentage_formatted}</span>` : ''}
+                        </div>
+                        <div class="wishlist-card__footer">
+                            <span class="badge">${p.brand_formatted}</span>
+                        </div>
+                        <div class="wishlist-card__actions">
+                            <button class="btn-move-cart" onclick="openSizeModal(${p.wishlist_id}, ${p.product_id})">Move to Cart</button>
+                            <button class="btn-remove" onclick="removeFromWishlist(${p.wishlist_id})">Remove</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function openSizeModal(wishlistId, productId) {
+            pendingWishlistId = wishlistId;
+            pendingProductId = productId;
+            document.getElementById('size-modal').classList.add('active');
+        }
+
+        function closeSizeModal() {
+            pendingWishlistId = null;
+            pendingProductId = null;
+            document.getElementById('size-modal').classList.remove('active');
+        }
+
+        async function confirmMoveToCart() {
+            const size = document.getElementById('size-select').value;
+            if (!size) return;
+            try {
+                await apiCall('/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({ product_id: pendingProductId, size })
+                });
+                await apiCall(`/wishlist/${pendingWishlistId}`, { method: 'DELETE' });
+                closeSizeModal();
+                loadWishlist();
+            } catch (e) {
+                showMsg('msg-area', 'Failed to move to cart: ' + e.message, 'error');
+                closeSizeModal();
+            }
+        }
+
+        async function removeFromWishlist(wishlistId) {
+            try {
+                await apiCall(`/wishlist/${wishlistId}`, { method: 'DELETE' });
+                loadWishlist();
+            } catch (e) {
+                showMsg('msg-area', 'Failed to remove: ' + e.message, 'error');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

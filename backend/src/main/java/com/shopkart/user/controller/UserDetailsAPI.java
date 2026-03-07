@@ -1,6 +1,6 @@
 package com.shopkart.user.controller;
 
-import com.shopkart.common.util.AuthUtil;
+import com.shopkart.user.util.AuthUtil;
 import com.shopkart.user.dto.request.UserDetailsRequest;
 import com.shopkart.user.dto.response.UserDetailsResponse;
 import com.shopkart.user.service.UserDetailsService;
@@ -26,21 +26,21 @@ public class UserDetailsAPI {
 
     @PostMapping
     public ResponseEntity<UserDetailsResponse> createUserDetails(@Valid @RequestBody UserDetailsRequest request) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         UserDetailsResponse response = userDetailsService.createOrUpdateUserDetails(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<UserDetailsResponse> getUserDetails() {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         UserDetailsResponse response = userDetailsService.getUserDetails(userId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping
     public ResponseEntity<UserDetailsResponse> updateUserDetails(@Valid @RequestBody UserDetailsRequest request) {
-        Long userId = AuthUtil.getUserIdFromAuth();
+        Long userId = AuthUtil.getUserIdFromJwt();
         UserDetailsResponse response = userDetailsService.createOrUpdateUserDetails(userId, request);
         return ResponseEntity.ok(response);
     }

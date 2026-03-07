@@ -52,7 +52,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         UserEntity user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> AuthExceptionStore.INVALID_CREDENTIALS.exception());
+                .orElseThrow(AuthExceptionStore.INVALID_CREDENTIALS::exception);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw AuthExceptionStore.INVALID_CREDENTIALS.exception();

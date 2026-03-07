@@ -34,7 +34,7 @@ public class ProductFormatHandler {
     }
 
     public static String formatCustomerCount(int total) {
-        return total + " Customers";
+        return total + Constants.Symbols.SPACE + Constants.Phrases.CUSTOMERS;
     }
 
     public static String formatStarPercentage(int starCount, int total) {

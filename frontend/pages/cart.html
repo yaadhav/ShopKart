@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 800px) { .cart-layout { grid-template-columns: 1fr; } }
+        .cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .cart-header h2 { margin: 0; font-size: 18px; }
+        .cart-header a { font-size: 13px; color: #333; font-weight: 600; text-decoration: underline; }
+        .cart-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item__image {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        .cart-item__image img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item__details { flex: 1; min-width: 0; }
+        .cart-item__name { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+        .cart-item__meta { font-size: 13px; color: #888; margin-bottom: 8px; }
+        .cart-item__controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .cart-item__controls select {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .qty-control {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .qty-control button {
+            width: 28px;
+            height: 30px;
+            border: none;
+            background: #f5f5f5;
+            font-size: 16px;
+            cursor: pointer;
+            line-height: 1;
+            color: #333;
+            padding: 0;
+        }
+        .qty-control button:hover { background: #e0e0e0; }
+        .qty-control input[type="number"] {
+            width: 40px;
+            height: 30px;
+            border: none;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            -moz-appearance: textfield;
+            outline: none;
+        }
+        .qty-control input[type="number"]::-webkit-inner-spin-button,
+        .qty-control input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .stock-warn-badge {
+            display: inline-block;
+            background: #fffbe6;
+            color: #b8860b;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #ffe58f;
+            border-radius: 3px;
+            padding: 2px 7px;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+        .oos-badge {
+            display: inline-block;
+            background: #fff0f0;
+            color: #c0392b;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #f5c6c6;
+            border-radius: 3px;
+            padding: 2px 7px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .low-stock-badge {
+            display: inline-block;
+            background: #fffbe6;
+            color: #b8860b;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #ffe58f;
+            border-radius: 3px;
+            padding: 2px 7px;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+        .cart-item__right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+            min-width: 130px;
+        }
+        .cart-item__pricing { text-align: right; }
+        .cart-item__price { font-weight: 700; font-size: 16px; }
+        .cart-item__orig-disc { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 3px; }
+        .cart-item__original { text-decoration: line-through; color: #888; font-size: 13px; }
+        .cart-item__discount { color: #27ae60; font-size: 13px; font-weight: 600; }
+        .cart-item__savings { font-size: 15px; text-align: right; }
+        .cart-item__actions { display: flex; gap: 6px; width: 100%; }
+        .btn-cart-action {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-cart-wishlist { background: #fff; color: #333; border: 1.5px solid #333; }
+        .btn-cart-wishlist:hover { background: #f5f5f5; }
+        .btn-cart-delete { background: #fff; color: #c0392b; border: 1.5px solid #c0392b; }
+        .btn-cart-delete:hover { background: #fff5f5; }
+        .order-panel {
+            position: sticky;
+            top: 20px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .order-panel h3 { margin: 0 0 16px; font-size: 16px; font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 12px; }
+        .order-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 10px; }
+        .order-row__label { color: #555; }
+        .order-row__value { font-weight: 600; }
+        .order-row--savings .order-row__value { color: #27ae60; }
+        .order-row--free .order-row__value { color: #27ae60; }
+        .order-divider { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
+        .order-total-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+        .convenience-label { font-size: 13px; font-weight: 600; color: #333; margin: 8px 0 4px; }
+        .convenience-sub { margin-left: 8px; }
+        .btn-proceed {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .btn-proceed:hover { background: #555; }
+        .empty-state { text-align: center; padding: 80px 20px; color: #888; }
+        .empty-state h2 { margin-bottom: 12px; color: #333; }
+        .empty-state a { color: #333; font-weight: 600; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--wide">
+        <div class="page-header">
+            <h1>My Cart</h1>
+        </div>
+        <div id="msg-area"></div>
+        <div id="cart-content">
+            <p style="color:#888;">Loading cart...</p>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let cartData = null;
+        let sizes = [];
+
+        async function init() {
+            if (!requireAuth()) return;
+            await loadSizes();
+            await loadCart();
+        }
+
+        async function loadSizes() {
+            try {
+                const meta = await apiCall('/products/meta');
+                sizes = meta.sizes || [];
+            } catch (e) {
+                sizes = [];
+            }
+        }
+
+        async function loadCart() {
+            try {
+                cartData = await apiCall('/cart');
+                renderCart(cartData);
+            } catch (e) {
+                document.getElementById('cart-content').innerHTML =
+                    `<div class="empty-state"><h2>Failed to load cart</h2><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderCart(data) {
+            const container = document.getElementById('cart-content');
+            const products = data.cart_products || [];
+
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Your cart is empty</h2>
+                        <p>Add items to get started.</p>
+                        <a href="products.html">Browse Products</a>
+                    </div>`;
+                return;
+            }
+
+            const hasOOS = products.some(p => p.quantity_formatted === 'Out of Stock');
+
+            const itemsHtml = products.map(buildCartItem).join('');
+            const orderPanelHtml = buildOrderPanel(data, hasOOS);
+
+            container.innerHTML = `
+                <div class="cart-layout">
+                    <div>
+                        <div class="cart-header">
+                            <h2>My Cart (${products.length} item${products.length !== 1 ? 's' : ''})</h2>
+                            <a href="wishlist.html">+ Add from Wishlist</a>
+                        </div>
+                        <div id="cart-items">${itemsHtml}</div>
+                    </div>
+                    ${orderPanelHtml}
+                </div>`;
+        }
+
+        function buildCartItem(p) {
+            const imageUrl = p.image ? SERVER + p.image : null;
+            const imageHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${p.name}">`
+                : `<div style="width:100%;height:100%;background:#eee;"></div>`;
+
+            const isOOS = p.quantity_formatted === 'Out of Stock';
+            const isLimited = p.quantity_formatted === 'Only Limited Stocks Left';
+
+            const sizeOptions = sizes.map(s =>
+                `<option value="${s.name}" ${s.name === p.size ? 'selected' : ''}>${s.display_name}</option>`
+            ).join('');
+
+            const qtyControl = !isOOS ? `
+                <div class="qty-control">
+                    <button onclick="adjustQty(${p.cart_id}, -1)">−</button>
+                    <input type="number" id="qty-${p.cart_id}" data-prev="${p.quantity}" value="${p.quantity}" min="1"
+                        onchange="changeQty(${p.cart_id}, this.value, this.dataset.prev)">
+                    <button onclick="adjustQty(${p.cart_id}, 1)">+</button>
+                </div>` : '';
+
+            const oosBadge = isOOS ? `<div class="oos-badge">OUT OF STOCK</div>` : '';
+            const limitedBadge = isLimited ? `<div class="low-stock-badge">⚠ Only Limited Stocks Left</div>` : '';
+
+            const rightPanel = isOOS ? `
+                <div class="cart-item__right">
+                    <div class="cart-item__pricing">
+                        <div class="cart-item__price">${p.selling_price_formatted || ''}</div>
+                        <div class="cart-item__orig-disc">
+                            ${p.original_price_formatted ? `<span class="cart-item__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.discount_percentage_formatted ? `<span class="cart-item__discount">${p.discount_percentage_formatted}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="cart-item__actions">
+                        <button class="btn-cart-action btn-cart-delete" onclick="deleteItem(${p.cart_id})">Delete</button>
+                        <button class="btn-cart-action btn-cart-wishlist" onclick="moveToWishlist(${p.cart_id}, ${p.product_id})">Move To Wishlist</button>
+                    </div>
+                </div>` : `
+                <div class="cart-item__right">
+                    <div class="cart-item__pricing">
+                        <div class="cart-item__price">${p.selling_price_formatted}</div>
+                        <div class="cart-item__orig-disc">
+                            ${p.original_price_formatted ? `<span class="cart-item__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.discount_percentage_formatted ? `<span class="cart-item__discount">${p.discount_percentage_formatted}</span>` : ''}
+                        </div>
+                        <div class="cart-item__savings">Saves ${p.item_savings_formatted}</div>
+                    </div>
+                    <div class="cart-item__actions">
+                        <button class="btn-cart-action btn-cart-delete" onclick="deleteItem(${p.cart_id})">Delete</button>
+                        <button class="btn-cart-action btn-cart-wishlist" onclick="moveToWishlist(${p.cart_id}, ${p.product_id})">Move To Wishlist</button>
+                    </div>
+                </div>`;
+
+            return `
+                <div class="cart-item" id="cart-item-${p.cart_id}">
+                    <div class="cart-item__image">${imageHtml}</div>
+                    <div class="cart-item__details">
+                        ${oosBadge}
+                        <div class="cart-item__name">${p.name}</div>
+                        <div class="cart-item__meta">${p.fashion_style_formatted} · ${p.brand_formatted}</div>
+                        <div class="cart-item__controls">
+                            <select ${isOOS ? 'disabled' : ''} onchange="changeSize(${p.cart_id}, ${p.product_id}, this.value)">
+                                ${sizeOptions}
+                            </select>
+                            ${qtyControl}
+                        </div>
+                        ${limitedBadge}
+                        <div id="qty-warn-${p.cart_id}" class="stock-warn-badge" style="display:none">⚠ Only limited stock available</div>
+                    </div>
+                    ${rightPanel}
+                </div>`;
+        }
+
+        function buildOrderPanel(data, hasOOS) {
+            const fee = data.convenience_fee || {};
+            const isFreeDel = fee.delivery_fee_formatted === 'Free';
+            const deliveryDisplay = isFreeDel
+                ? `<span style="color:#27ae60;font-weight:600;">Free</span>`
+                : fee.delivery_fee_formatted;
+
+            const proceedBtn = hasOOS
+                ? `<button class="btn-proceed" disabled style="background:#ccc;cursor:not-allowed;opacity:0.7;">ITEMS OUT OF STOCK</button>`
+                : `<button class="btn-proceed" onclick="alert('Coming soon!')">PROCEED TO ORDER</button>`;
+
+            return `
+                <div class="order-panel">
+                    <h3>Order Details</h3>
+                    <div class="order-row">
+                        <span class="order-row__label">Cart Total</span>
+                        <span class="order-row__value">${data.order_amount_formatted}</span>
+                    </div>
+                    <div class="order-row order-row--savings">
+                        <span class="order-row__label">Cart Savings</span>
+                        <span class="order-row__value">-${data.order_savings_formatted}</span>
+                    </div>
+                    <div class="convenience-label">Convenience Fee</div>
+                    <div class="convenience-sub">
+                        <div class="order-row ${isFreeDel ? 'order-row--free' : ''}">
+                            <span class="order-row__label">Delivery Fee</span>
+                            <span class="order-row__value">${deliveryDisplay}</span>
+                        </div>
+                        <div class="order-row">
+                            <span class="order-row__label">Platform Fee</span>
+                            <span class="order-row__value">${fee.platform_fee_formatted}</span>
+                        </div>
+                    </div>
+                    <hr class="order-divider">
+                    <div class="order-total-row">
+                        <span>Order Total</span>
+                        <span>${data.order_total_formatted}</span>
+                    </div>
+                    ${proceedBtn}
+                </div>`;
+        }
+
+        async function changeSize(cartId, productId, newSize) {
+            try {
+                await apiCall('/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({ product_id: productId, size: newSize })
+                });
+                loadCart();
+            } catch (e) {
+                showMsg('msg-area', 'Failed to update size: ' + e.message, 'error');
+                loadCart();
+            }
+        }
+
+        function adjustQty(cartId, delta) {
+            const input = document.getElementById(`qty-${cartId}`);
+            const prevVal = parseInt(input.value);
+            const newVal = Math.max(1, prevVal + delta);
+            input.value = newVal;
+            changeQty(cartId, newVal, prevVal);
+        }
+
+        async function changeQty(cartId, quantity, prevQty) {
+            const warn = document.getElementById(`qty-warn-${cartId}`);
+            if (warn) warn.style.display = 'none';
+            try {
+                await apiCall(`/cart/${cartId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ quantity: parseInt(quantity) })
+                });
+                const input = document.getElementById(`qty-${cartId}`);
+                if (input) input.dataset.prev = quantity;
+            } catch (e) {
+                const input = document.getElementById(`qty-${cartId}`);
+                if (input && prevQty !== undefined) input.value = prevQty;
+                if (e.message && e.message.toLowerCase().includes('exceeds available stock')) {
+                    if (warn) warn.style.display = 'block';
+                } else {
+                    showMsg('msg-area', 'Failed to update quantity: ' + e.message, 'error');
+                }
+            }
+        }
+
+        async function deleteItem(cartId) {
+            try {
+                await apiCall(`/cart/${cartId}`, { method: 'DELETE' });
+                loadCart();
+            } catch (e) {
+                showMsg('msg-area', 'Failed to delete item: ' + e.message, 'error');
+            }
+        }
+
+        async function moveToWishlist(cartId, productId) {
+            try {
+                await apiCall('/wishlist', {
+                    method: 'POST',
+                    body: JSON.stringify({ product_id: productId })
+                });
+            } catch (e) {
+                // 409 = already in wishlist — that's fine, still remove from cart
+                if (!e.message.includes('409') && !e.message.toLowerCase().includes('already')) {
+                    showMsg('msg-area', 'Failed to add to wishlist: ' + e.message, 'error');
+                    loadCart();
+                    return;
+                }
+            }
+            try {
+                await apiCall(`/cart/${cartId}`, { method: 'DELETE' });
+                loadCart();
+            } catch (e) {
+                showMsg('msg-area', 'Failed to remove from cart: ' + e.message, 'error');
+                loadCart();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -95,8 +95,8 @@
         
         .product-price {
             display: flex;
-            align-items: baseline;
-            gap: 12px;
+            flex-direction: column;
+            gap: 4px;
             margin-bottom: 20px;
         }
         
@@ -104,6 +104,12 @@
             font-size: 28px;
             font-weight: 700;
             color: #333;
+        }
+        
+        .price-orig-disc {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .price-original {
@@ -184,8 +190,24 @@
         }
         
         .size-option.out-of-stock {
-            opacity: 0.3;
+            position: relative;
             cursor: not-allowed;
+            color: #bbb;
+            border-color: #ddd;
+            overflow: hidden;
+        }
+        
+        .size-option.out-of-stock::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                to top right,
+                transparent calc(50% - 0.7px),
+                #bbb calc(50% - 0.7px),
+                #bbb calc(50% + 0.7px),
+                transparent calc(50% + 0.7px)
+            );
         }
         
         .action-buttons {
@@ -444,8 +466,10 @@
                     
                     <div class="product-price">
                         <span class="price-current" id="price-current"></span>
-                        <span class="price-original" id="price-original"></span>
-                        <span class="price-discount" id="price-discount"></span>
+                        <div class="price-orig-disc">
+                            <span class="price-original" id="price-original"></span>
+                            <span class="price-discount" id="price-discount"></span>
+                        </div>
                     </div>
                     
                     <div class="product-details-section">
@@ -491,16 +515,37 @@
 
         let productData = null;
         let selectedSize = null;
+        let wishlistId = null;
+        let metaSizes = [];
 
         async function loadProductDetails() {
             try {
-                productData = await apiCall(`/products/${productId}`);
+                const [data, meta] = await Promise.all([
+                    apiCall(`/products/${productId}`),
+                    apiCall('/products/meta').catch(() => ({ sizes: [] }))
+                ]);
+                metaSizes = meta.sizes || [];
+                productData = data;
                 renderProduct(productData);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('product-details').style.display = 'block';
+                if (isLoggedIn()) loadWishlistState();
             } catch (err) {
                 document.getElementById('loading').textContent = 'Failed to load product details: ' + err.message;
             }
+        }
+
+        async function loadWishlistState() {
+            try {
+                const items = await apiCall('/wishlist');
+                const match = items.find(item => item.product_id == productId);
+                if (match) {
+                    wishlistId = match.wishlist_id;
+                    const heartIcon = document.getElementById('heart-icon');
+                    heartIcon.classList.add('filled');
+                    heartIcon.style.color = '#ff4757';
+                }
+            } catch (e) {}
         }
 
         function renderProduct(data) {
@@ -584,10 +629,8 @@
                 }
             }
 
-            // Stock/Sizes
-            if (data.stock) {
-                renderSizeOptions(data.stock);
-            }
+            // Stock/Sizes - always render, using meta sizes as reference
+            renderSizeOptions(data.stock || {});
         }
 
         function renderThumbnails(images) {
@@ -612,23 +655,31 @@
         function renderSizeOptions(stock) {
             const container = document.getElementById('size-options');
             container.innerHTML = '';
-            
-            Object.entries(stock).forEach(([size, quantity]) => {
+
+            // Use meta sizes if available, else fall back to keys in stock
+            const sizesToRender = metaSizes.length > 0
+                ? metaSizes
+                : Object.keys(stock).map(s => ({ name: s, display_name: s.toUpperCase() }));
+
+            sizesToRender.forEach(sizeInfo => {
+                const sizeName = sizeInfo.name;
+                const qty = stock[sizeName] !== undefined ? stock[sizeName] : 0;
+
                 const option = document.createElement('div');
                 option.className = 'size-option';
-                option.textContent = size.toUpperCase();
-                
-                if (quantity === 0) {
+                option.textContent = sizeInfo.display_name || sizeName.toUpperCase();
+
+                if (qty === 0) {
                     option.classList.add('out-of-stock');
                     option.title = 'Out of stock';
                 } else {
                     option.onclick = () => {
                         document.querySelectorAll('.size-option').forEach(o => o.classList.remove('selected'));
                         option.classList.add('selected');
-                        selectedSize = size;
+                        selectedSize = sizeName;
                     };
                 }
-                
+
                 container.appendChild(option);
             });
         }
@@ -674,8 +725,7 @@
             return stars;
         }
 
-        // Dummy button handlers
-        function addToCart() {
+        async function addToCart() {
             if (!isLoggedIn()) {
                 window.location.href = 'login.html';
                 return;
@@ -684,7 +734,15 @@
                 alert('Please select a size');
                 return;
             }
-            alert(`Added to cart: ${productData.name} - Size ${selectedSize.toUpperCase()}`);
+            try {
+                await apiCall('/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({ product_id: parseInt(productId), size: selectedSize })
+                });
+                alert(`${productData.name} (${selectedSize.toUpperCase()}) added to cart!`);
+            } catch (e) {
+                alert('Failed to add to cart: ' + e.message);
+            }
         }
 
         function buyNow() {
@@ -696,23 +754,38 @@
                 alert('Please select a size');
                 return;
             }
-            alert(`Buy now: ${productData.name} - Size ${selectedSize.toUpperCase()}`);
+            alert('Buy now feature coming soon!');
         }
 
-        function toggleFavorite() {
+        async function toggleFavorite() {
             if (!isLoggedIn()) {
                 window.location.href = 'login.html';
                 return;
             }
             const heartIcon = document.getElementById('heart-icon');
             const isFilled = heartIcon.classList.contains('filled');
-            
-            if (isFilled) {
-                heartIcon.classList.remove('filled');
-                heartIcon.style.color = '#fff';
+
+            if (isFilled && wishlistId) {
+                try {
+                    await apiCall(`/wishlist/${wishlistId}`, { method: 'DELETE' });
+                    wishlistId = null;
+                    heartIcon.classList.remove('filled');
+                    heartIcon.style.color = '#fff';
+                } catch (e) {
+                    alert('Failed to remove from wishlist: ' + e.message);
+                }
             } else {
-                heartIcon.classList.add('filled');
-                heartIcon.style.color = '#ff4757';
+                try {
+                    const res = await apiCall('/wishlist', {
+                        method: 'POST',
+                        body: JSON.stringify({ product_id: parseInt(productId) })
+                    });
+                    wishlistId = res.wishlist_id;
+                    heartIcon.classList.add('filled');
+                    heartIcon.style.color = '#ff4757';
+                } catch (e) {
+                    alert('Failed to add to wishlist: ' + e.message);
+                }
             }
         }
         
