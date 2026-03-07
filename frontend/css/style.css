@@ -90,6 +90,21 @@ a:hover { text-decoration: underline; }
     font-weight: 500;
     color: var(--color-text-secondary);
 }
+.navbar-links .nav-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #333;
+    color: #fff;
+    font-size: 16px;
+    text-decoration: none;
+    line-height: 1;
+}
+.navbar-links .nav-icon-btn:hover { background: #555; text-decoration: none; }
+.navbar-links .nav-cart { font-size: 13px; }
 
 /* ── Layout ───────────────────────────────────── */
 .container {

@@ -9,6 +9,7 @@ import com.shopkart.catalog.util.CatalogConstants.Keys;
 import com.shopkart.common.util.Constants;
 import com.shopkart.common.util.CurrencyUtil;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,5 +26,19 @@ public class ProductFormatHandler {
         formatted.put(Keys.FASHION_STYLE + Keys.FORMATTED_SUFFIX, FashionStyle.getDisplayName(FashionStyle.getCode(product.getFashionStyle())));
         formatted.put(Keys.OCCASION + Keys.FORMATTED_SUFFIX, Occasion.getDisplayName(Occasion.getCode(product.getOccasion())));
         return formatted;
+    }
+
+    public static String formatRatingDisplay(BigDecimal rating) {
+        if (rating == null) return null;
+        return rating.setScale(1, java.math.RoundingMode.HALF_UP).toPlainString();
+    }
+
+    public static String formatCustomerCount(int total) {
+        return total + " Customers";
+    }
+
+    public static String formatStarPercentage(int starCount, int total) {
+        if (total == 0) return "0%";
+        return Math.round(starCount * 100.0 / total) + Constants.Symbols.PERCENT;
     }
 }

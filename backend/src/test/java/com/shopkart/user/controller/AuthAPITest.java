@@ -45,7 +45,7 @@ class AuthAPITest {
                 .build();
         when(authService.register(any(RegisterRequest.class))).thenReturn(response);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new RegisterRequest("Test User", "test@shopkart.com", "password123"))))
@@ -57,7 +57,7 @@ class AuthAPITest {
 
     @Test
     void register_withInvalidEmail_returns400() throws Exception {
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new RegisterRequest("Test User", "not-an-email", "password123"))))
@@ -67,7 +67,7 @@ class AuthAPITest {
 
     @Test
     void register_withBlankPassword_returns400() throws Exception {
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new RegisterRequest("Test User", "test@shopkart.com", ""))))
@@ -80,7 +80,7 @@ class AuthAPITest {
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new ShopKartException(HttpStatus.CONFLICT, "AUTH_003", "User with this email already exists"));
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new RegisterRequest("Test User", "test@shopkart.com", "password123"))))
@@ -98,7 +98,7 @@ class AuthAPITest {
                 .build();
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new LoginRequest("test@shopkart.com", "password123"))))
@@ -112,7 +112,7 @@ class AuthAPITest {
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new ShopKartException(HttpStatus.UNAUTHORIZED, "AUTH_002", "Invalid email or password"));
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new LoginRequest("test@shopkart.com", "wrong"))))

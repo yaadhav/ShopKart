@@ -19,7 +19,7 @@ public class UserDetailsRequest {
     private String phoneNumber;
 
     @JsonProperty("gender")
-    private Short gender; // 0: Not specified, 1: Male, 2: Female, 3: Other
+    private Short gender;
 
     @JsonProperty("date_of_birth")
     private LocalDate dateOfBirth;

@@ -17,10 +17,10 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("/meta")
-public class MetaAPI {
+@RequestMapping("/api/v1/products")
+public class ProductMetaAPI {
 
-    @GetMapping("")
+    @GetMapping("/meta")
     public ResponseEntity<MetaResponse> getAll() {
         MetaResponse response = MetaResponse.builder()
                 .brands(toMetaList(Brand.values()))

@@ -256,7 +256,7 @@
 
         async function loadMeta() {
             try {
-                const meta = await apiCall("/meta");
+                const meta = await apiCall("/products/meta");
                 populateSelect("prod-brand", meta.brands);
                 populateSelect("prod-category", meta.categories);
                 populateSelect("prod-fashion-style", meta.fashion_styles);

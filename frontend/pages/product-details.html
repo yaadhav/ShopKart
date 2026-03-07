@@ -513,23 +513,23 @@
             }
 
             // Rating
-            const rating = parseFloat(data.rating) || 0;
-            const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-            document.getElementById('rating-stars').textContent = rating.toFixed(1) + ' ' + stars;
-            document.getElementById('rating-count').textContent = `(${data.rating_count} ratings)`;
+            const ratingVal = parseFloat(data.rating) || 0;
+            const ratingStars = renderStarIcons(ratingVal);
+            document.getElementById('rating-stars').textContent = (data.rating_formatted || '') + ' ' + ratingStars;
+            document.getElementById('rating-count').textContent = data.rating_count_formatted ? `(${data.rating_count_formatted})` : '';
 
             // Price
-            document.getElementById('price-current').textContent = formatCurrency(data.selling_price);
-            document.getElementById('price-original').textContent = formatCurrency(data.original_price);
-            if (data.discount_percentage > 0) {
-                document.getElementById('price-discount').textContent = `${data.discount_percentage}% OFF`;
+            document.getElementById('price-current').textContent = data.selling_price_formatted;
+            document.getElementById('price-original').textContent = data.original_price_formatted;
+            if (data.discount_percentage_formatted) {
+                document.getElementById('price-discount').textContent = data.discount_percentage_formatted;
             } else {
                 document.getElementById('price-discount').style.display = 'none';
             }
 
             // Images
             if (data.images && data.images.length > 0) {
-                const mainImageUrl = data.images[0].startsWith('http') ? data.images[0] : API + data.images[0];
+                const mainImageUrl = data.images[0].startsWith('http') ? data.images[0] : SERVER + data.images[0];
                 document.getElementById('main-image').src = mainImageUrl;
                 renderThumbnails(data.images);
             }
@@ -595,12 +595,12 @@
             container.innerHTML = '';
             
             images.forEach((url, index) => {
-                const imageUrl = url.startsWith('http') ? url : API + url;
+                const imageUrl = url.startsWith('http') ? url : SERVER + url;
                 const thumb = document.createElement('div');
                 thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
                 thumb.innerHTML = `<img src="${imageUrl}" alt="Image ${index + 1}">`;
                 thumb.onclick = () => {
-                    const mainUrl = url.startsWith('http') ? url : API + url;
+                    const mainUrl = url.startsWith('http') ? url : SERVER + url;
                     document.getElementById('main-image').src = mainUrl;
                     document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
                     thumb.classList.add('active');
@@ -634,41 +634,29 @@
         }
 
         function renderRatingBreakdown(breakdown) {
-            // Use total_count from backend, or calculate it
-            const total = breakdown.total_count || 
-                         (breakdown['5_star'] + breakdown['4_star'] + breakdown['3_star'] + 
-                          breakdown['2_star'] + breakdown['1_star']);
-            
-            if (total === 0) return;
+            const hasData = breakdown['5_star'] && breakdown['5_star'] !== '0%';
+            if (!hasData && breakdown['5_star'] === '0%' &&
+                breakdown['4_star'] === '0%' && breakdown['3_star'] === '0%') return;
 
-            // Set the rating number and customer count
-            document.getElementById('rating-number').textContent = productData.rating.toFixed(1);
-            
-            // Format customer count (show abbreviated if large, otherwise full number)
-            let customerCountText;
-            if (total >= 1000) {
-                customerCountText = (total / 1000).toFixed(1) + 'K Customers';
-            } else {
-                customerCountText = total.toLocaleString() + ' Customers';
-            }
-            document.getElementById('customer-count').textContent = customerCountText;
+            document.getElementById('rating-number').textContent = productData.rating_formatted || productData.rating;
+            document.getElementById('customer-count').textContent = productData.rating_count_formatted || '';
 
-            // Show ratings bars with percentages
             const container = document.getElementById('rating-bars');
             container.innerHTML = '';
             
             for (let i = 5; i >= 1; i--) {
-                const count = breakdown[`${i}_star`] || 0;
-                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                const pctStr = breakdown[`${i}_star`] || '0%';
+                const pctWidth = parseFloat(pctStr) || 0;
+                const pctFormatted = breakdown[`${i}_star_formatted`] || '0%';
                 
                 const bar = document.createElement('div');
                 bar.className = 'rating-bar';
                 bar.innerHTML = `
                     <div class="rating-label">${i} ★</div>
                     <div class="rating-bar-bg">
-                        <div class="rating-bar-fill" style="width: ${percent}%"></div>
+                        <div class="rating-bar-fill" style="width: ${pctWidth}%"></div>
                     </div>
-                    <div class="rating-bar-percent">${percent}%</div>
+                    <div class="rating-bar-percent">${pctFormatted}</div>
                 `;
                 container.appendChild(bar);
             }
@@ -676,11 +664,14 @@
             document.getElementById('ratings-chart').style.display = 'block';
         }
 
-        function formatCurrency(amount) {
-            return '₹' + parseFloat(amount).toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+        function renderStarIcons(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (rating >= i) stars += '★';
+                else if (rating >= i - 0.5) stars += '★';
+                else stars += '☆';
+            }
+            return stars;
         }
 
         // Dummy button handlers

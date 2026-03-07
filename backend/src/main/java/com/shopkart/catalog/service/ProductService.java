@@ -19,6 +19,9 @@ import com.shopkart.catalog.util.CatalogConstants;
 import com.shopkart.catalog.util.CatalogConstants.Entity;
 import com.shopkart.catalog.util.CatalogConstants.Keys;
 import com.shopkart.catalog.util.CatalogExceptionStore;
+import com.shopkart.catalog.util.ProductFormatHandler;
+import com.shopkart.common.util.Constants;
+import com.shopkart.common.util.CurrencyUtil;
 import com.shopkart.common.util.PageRequestBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -236,44 +239,59 @@ public class ProductService {
         response.put(Keys.NAME, product.getName());
         response.put(Keys.TAG_LINE, product.getTagline());
         response.put(Keys.SELLING_PRICE, product.getSellingPrice());
+        response.put(Keys.SELLING_PRICE + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(product.getSellingPrice()));
         response.put(Keys.ORIGINAL_PRICE, product.getOriginalPrice());
+        response.put(Keys.ORIGINAL_PRICE + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(product.getOriginalPrice()));
         response.put(Keys.DISCOUNT_PERCENTAGE, product.getDiscountPercentage());
+        response.put(Keys.DISCOUNT_PERCENTAGE + Keys.FORMATTED_SUFFIX, product.getDiscountPercentage() != null ? product.getDiscountPercentage() + Constants.Symbols.PERCENT_OFF : null);
         response.put(Keys.RATING, product.getRating());
+        response.put(Keys.RATING + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatRatingDisplay(product.getRating()));
         response.put(Keys.RATING_COUNT, product.getRatingCount());
+        response.put(Keys.RATING_COUNT + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatCustomerCount(product.getRatingCount()));
         response.put(Keys.BRAND, Brand.getName(product.getBrand()));
+        response.put(Keys.BRAND + Keys.FORMATTED_SUFFIX, Brand.getDisplayName(product.getBrand()));
         response.put(Keys.FASHION_STYLE, FashionStyle.getName(product.getFashionStyle()));
+        response.put(Keys.FASHION_STYLE + Keys.FORMATTED_SUFFIX, FashionStyle.getDisplayName(product.getFashionStyle()));
         response.put(Keys.CATEGORY, Category.getName(product.getCategory()));
+        response.put(Keys.CATEGORY + Keys.FORMATTED_SUFFIX, Category.getDisplayName(product.getCategory()));
         response.put(Keys.OCCASION, Occasion.getName(product.getOccasion()));
+        response.put(Keys.OCCASION + Keys.FORMATTED_SUFFIX, Occasion.getDisplayName(product.getOccasion()));
 
         if (details != null) {
             Map<String, Object> detailsMap = new java.util.LinkedHashMap<>();
-            detailsMap.put("description", details.getDescription());
-            detailsMap.put("color", details.getColor());
-            detailsMap.put("material", details.getMaterial());
-            detailsMap.put("length", details.getLength());
-            detailsMap.put("sleeve", details.getSleeve());
-            detailsMap.put("transparency", details.getTransparency());
-            detailsMap.put("care_instructions", details.getCareInstructions());
+            detailsMap.put(Keys.DESCRIPTION, details.getDescription());
+            detailsMap.put(Keys.COLOR, details.getColor());
+            detailsMap.put(Keys.MATERIAL, details.getMaterial());
+            detailsMap.put(Keys.LENGTH, details.getLength());
+            detailsMap.put(Keys.SLEEVE, details.getSleeve());
+            detailsMap.put(Keys.TRANSPARENCY, details.getTransparency());
+            detailsMap.put(Keys.CARE_INSTRUCTIONS, details.getCareInstructions());
 
-            Map<String, Integer> ratingBreakdown = new java.util.LinkedHashMap<>();
-            ratingBreakdown.put("5_star", details.getRating5Star());
-            ratingBreakdown.put("4_star", details.getRating4Star());
-            ratingBreakdown.put("3_star", details.getRating3Star());
-            ratingBreakdown.put("2_star", details.getRating2Star());
-            ratingBreakdown.put("1_star", details.getRating1Star());
+            Map<String, Object> ratingBreakdown = new java.util.LinkedHashMap<>();
 
-            int totalCount = details.getRating5Star() + details.getRating4Star() + 
-                           details.getRating3Star() + details.getRating2Star() + 
-                           details.getRating1Star();
-            ratingBreakdown.put("total_count", totalCount);
+            int totalCount = details.getRating5Star() + details.getRating4Star() + details.getRating3Star() + details.getRating2Star() + details.getRating1Star();
+
+            ratingBreakdown.put(Keys.STAR_5, details.getRating5Star());
+            ratingBreakdown.put(Keys.STAR_5 + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatStarPercentage(details.getRating5Star(), totalCount));
+            ratingBreakdown.put(Keys.STAR_4, details.getRating4Star());
+            ratingBreakdown.put(Keys.STAR_4 + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatStarPercentage(details.getRating4Star(), totalCount));
+            ratingBreakdown.put(Keys.STAR_3, details.getRating3Star());
+            ratingBreakdown.put(Keys.STAR_3 + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatStarPercentage(details.getRating3Star(), totalCount));
+            ratingBreakdown.put(Keys.STAR_2, details.getRating2Star());
+            ratingBreakdown.put(Keys.STAR_2 + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatStarPercentage(details.getRating2Star(), totalCount));
+            ratingBreakdown.put(Keys.STAR_1, details.getRating1Star());
+            ratingBreakdown.put(Keys.STAR_1 + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatStarPercentage(details.getRating1Star(), totalCount));
+
+            ratingBreakdown.put(Keys.TOTAL_COUNT, totalCount);
+            ratingBreakdown.put(Keys.TOTAL_COUNT + Keys.FORMATTED_SUFFIX, ProductFormatHandler.formatCustomerCount(totalCount));
+
+            detailsMap.put(Keys.RATING_BREAKDOWN, ratingBreakdown);
             
-            detailsMap.put("rating_breakdown", ratingBreakdown);
-            
-            response.put("details", detailsMap);
+            response.put(Keys.DETAILS, detailsMap);
         }
         
-        response.put("images", images);
-        response.put("stock", stock);
+        response.put(Keys.IMAGES, images);
+        response.put(Keys.STOCK, stock);
         
         return response;
     }

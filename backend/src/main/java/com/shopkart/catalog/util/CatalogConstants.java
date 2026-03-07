@@ -33,6 +33,23 @@ public final class CatalogConstants {
         public static final String OCCASION = "occasion";
         public static final String IMAGE = "image";
         public static final String FORMATTED_SUFFIX = "_formatted";
+        public static final String DESCRIPTION = "description";
+        public static final String COLOR = "color";
+        public static final String MATERIAL = "material";
+        public static final String LENGTH = "length";
+        public static final String SLEEVE = "sleeve";
+        public static final String TRANSPARENCY = "transparency";
+        public static final String CARE_INSTRUCTIONS = "care_instructions";
+        public static final String RATING_BREAKDOWN = "rating_breakdown";
+        public static final String STAR_5 = "5_star";
+        public static final String STAR_4 = "4_star";
+        public static final String STAR_3 = "3_star";
+        public static final String STAR_2 = "2_star";
+        public static final String STAR_1 = "1_star";
+        public static final String TOTAL_COUNT = "total_count";
+        public static final String DETAILS = "details";
+        public static final String IMAGES = "images";
+        public static final String STOCK = "stock";
     }
 
     public static final class SortLabels {

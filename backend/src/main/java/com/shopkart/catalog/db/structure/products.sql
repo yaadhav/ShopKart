@@ -11,8 +11,8 @@ CREATE TABLE products (
     rating NUMERIC(2,1) DEFAULT 0 CHECK (rating >= 0.0 AND rating <= 5.0),
     ratingcount INTEGER NOT NULL DEFAULT 0,
 
-    brand INTEGER NOT NULL,
     fashionstyle INTEGER NOT NULL,
+    brand INTEGER NOT NULL,
     category INTEGER NOT NULL,
     occasion INTEGER NOT NULL,
 
@@ -29,7 +29,7 @@ CREATE INDEX idx_products_occasion ON products(occasion);
 
 
 CREATE TABLE productimages (
-    productimages BIGSERIAL PRIMARY KEY,
+    productimagesid BIGSERIAL PRIMARY KEY,
     productid BIGINT NOT NULL,
 
     imageurl VARCHAR(512) NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE productdetails (
 
 
 CREATE TABLE productstock (
-    productstock BIGSERIAL PRIMARY KEY,
+    productstockid BIGSERIAL PRIMARY KEY,
     productid BIGINT NOT NULL,
 
     size INTEGER NOT NULL,

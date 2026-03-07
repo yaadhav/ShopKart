@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/uploads")
+@RequestMapping("/api/v1/uploads")
 public class UploadAPI {
 
     private final FileUploadService fileUploadService;

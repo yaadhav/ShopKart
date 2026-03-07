@@ -1,4 +1,5 @@
-const API = "http://localhost:8080";
+const SERVER = "http://localhost:8080";
+const API = SERVER + "/api/v1";
 const BASE = location.pathname.includes("/pages/") ? ".." : ".";
 
 /* ── Auth helpers ─────────────────────────────── */
@@ -40,10 +41,16 @@ function updateNav() {
 
     const user = getUser();
     if (user) {
-        const roleLabel = (user.role === "admin" || user.role === "owner")
-            ? `<span class="nav-role"> · ${user.role}</span>` : "";
+        const isRegularUser = user.role !== "admin" && user.role !== "owner";
+        const roleLabel = !isRegularUser ? `<span class="nav-role"> · ${user.role}</span>` : "";
+        const wishlistBtn = isRegularUser
+            ? `<a href="${BASE}/pages/wishlist.html" class="nav-icon-btn" title="Wishlist">♡</a>` : "";
+        const cartBtn = isRegularUser
+            ? `<a href="${BASE}/pages/cart.html" class="nav-user nav-cart">Cart</a>` : "";
         links.innerHTML =
             `<a href="${BASE}/pages/products.html">Products</a>` +
+            wishlistBtn +
+            cartBtn +
             `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}${roleLabel}</a>`;
     } else {
         links.innerHTML =

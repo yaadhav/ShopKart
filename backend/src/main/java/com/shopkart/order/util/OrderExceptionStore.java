@@ -1,4 +1,4 @@
-package com.shopkart.cart.service;
+package com.shopkart.order.util;
 
 import com.shopkart.common.exception.ExceptionStore;
 import lombok.AllArgsConstructor;
@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum CartExceptionStore implements ExceptionStore {
+public enum OrderExceptionStore implements ExceptionStore {
     ;
 
     private final HttpStatus status;
