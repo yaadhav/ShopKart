@@ -24,7 +24,7 @@ public final class PageRequestBuilder {
         String entityField = sortFieldMap.get(sortKey);
 
         String sortOrder = params.getOrDefault(PageConstants.Params.SORT_ORDER, PageConstants.DEFAULT_SORT_ORDER);
-        Sort sort = sortOrder.equalsIgnoreCase("desc")
+        Sort sort = sortOrder.equalsIgnoreCase(Constants.Sort.DESC)
                 ? Sort.by(entityField).descending()
                 : Sort.by(entityField).ascending();
 

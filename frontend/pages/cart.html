@@ -340,7 +340,7 @@
 
             const proceedBtn = hasOOS
                 ? `<button class="btn-proceed" disabled style="background:#ccc;cursor:not-allowed;opacity:0.7;">ITEMS OUT OF STOCK</button>`
-                : `<button class="btn-proceed" onclick="alert('Coming soon!')">PROCEED TO ORDER</button>`;
+                : `<button class="btn-proceed" onclick="window.location.href='checkout.html'">PROCEED TO ORDER</button>`;
 
             return `
                 <div class="order-panel">

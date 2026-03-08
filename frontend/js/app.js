@@ -43,12 +43,15 @@ function updateNav() {
     if (user) {
         const isRegularUser = user.role !== "admin" && user.role !== "owner";
         const roleLabel = !isRegularUser ? `<span class="nav-role"> · ${user.role}</span>` : "";
+        const ordersLink = isRegularUser
+            ? `<a href="${BASE}/pages/orders.html">Orders</a>` : "";
         const wishlistBtn = isRegularUser
             ? `<a href="${BASE}/pages/wishlist.html" class="nav-icon-btn" title="Wishlist">♡</a>` : "";
         const cartBtn = isRegularUser
             ? `<a href="${BASE}/pages/cart.html" class="nav-user nav-cart">Cart</a>` : "";
         links.innerHTML =
             `<a href="${BASE}/pages/products.html">Products</a>` +
+            ordersLink +
             wishlistBtn +
             cartBtn +
             `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}${roleLabel}</a>`;

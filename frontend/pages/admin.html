@@ -70,6 +70,58 @@
             margin-bottom: 16px;
             color: #333;
         }
+
+        /* ── Order Management ─────────────────────── */
+        .order-status-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .order-status-form .form-group {
+            margin-bottom: 0;
+        }
+        .order-status-form .form-group:first-child {
+            flex: 0 0 180px;
+        }
+        .order-status-form .form-group:nth-child(2) {
+            flex: 0 0 200px;
+        }
+        .order-result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+        .order-result.visible { display: block; }
+        .order-result-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 14px;
+        }
+        .order-result-row strong {
+            min-width: 100px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: capitalize;
+        }
+        .status-badge--delivered { background: #e6f9ee; color: #1a8a4a; }
+        .status-badge--shipped { background: #e6f0ff; color: #1a6bba; }
+        .status-badge--initiated,
+        .status-badge--confirmed { background: #fff8e1; color: #b8860b; }
+        .status-badge--payment_failed,
+        .status-badge--cancelled { background: #fff0f0; color: #c0392b; }
+        .status-badge--payment_pending { background: #f0f0f0; color: #666; }
+        .msg--info { color: #1a6bba; }
     </style>
 </head>
 <body>
@@ -107,6 +159,44 @@
                     <p><strong>Email:</strong> <span id="cred-email"></span></p>
                     <p><strong>Password:</strong> <code id="cred-password"></code></p>
                     <p class="cred-warning">⚠ Save this password now. It cannot be retrieved later.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin + Owner: Order Management -->
+        <div id="order-management-section" class="section" style="display:none;">
+            <div class="card">
+                <h3 class="section-title">Order Management</h3>
+                <p style="color:#666; margin-bottom:16px; font-size:14px;">Update the status of any order by entering its Order ID and selecting a new status.</p>
+                <form id="update-order-form">
+                    <div class="order-status-form">
+                        <div class="form-group">
+                            <label for="order-id-input">Order ID</label>
+                            <input type="number" id="order-id-input" placeholder="e.g. 1001" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="order-new-status">New Status</label>
+                            <select id="order-new-status" required>
+                                <option value="">Select status</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="update-order-btn">Update Status</button>
+                    </div>
+                    <div id="order-msg" class="msg"></div>
+                </form>
+                <div class="order-result" id="order-result">
+                    <div class="order-result-row">
+                        <strong>Order ID:</strong>
+                        <span id="result-order-id"></span>
+                    </div>
+                    <div class="order-result-row" style="margin-top:8px;">
+                        <strong>New Status:</strong>
+                        <span id="result-order-status" class="status-badge"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -248,6 +338,7 @@
             }
 
             document.getElementById("add-product-section").style.display = "block";
+            document.getElementById("order-management-section").style.display = "block";
             loadMeta();
         })();
 
@@ -475,6 +566,59 @@
                 renderStockGrid();
             } catch (err) {
                 showMsg("product-msg", err.message, "error");
+            }
+        });
+
+        /* ── Order Status Update ─────────────────────── */
+        function getStatusBadgeClass(status) {
+            const s = (status || "").toLowerCase();
+            if (s === "delivered") return "status-badge--delivered";
+            if (s === "shipped") return "status-badge--shipped";
+            if (s === "initiated" || s === "confirmed") return "status-badge--initiated";
+            if (s === "payment_failed" || s === "cancelled") return "status-badge--payment_failed";
+            if (s === "payment_pending") return "status-badge--payment_pending";
+            return "";
+        }
+
+        document.getElementById("update-order-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearMsg("order-msg");
+            document.getElementById("order-result").classList.remove("visible");
+
+            const orderId = document.getElementById("order-id-input").value.trim();
+            const newStatus = document.getElementById("order-new-status").value;
+
+            if (!orderId || !newStatus) {
+                showMsg("order-msg", "Please enter an Order ID and select a status", "error");
+                return;
+            }
+
+            const btn = document.getElementById("update-order-btn");
+            btn.disabled = true;
+            btn.textContent = "Updating...";
+
+            try {
+                const data = await apiCall(`/admin/orders/${orderId}/status`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ order_status: newStatus })
+                });
+
+                showMsg("order-msg", "Order status updated successfully!", "success");
+
+                const resultDiv = document.getElementById("order-result");
+                document.getElementById("result-order-id").textContent = data.order_id;
+
+                const statusBadge = document.getElementById("result-order-status");
+                statusBadge.textContent = data.order_status_formatted;
+                statusBadge.className = "status-badge " + getStatusBadgeClass(data.order_status);
+
+                resultDiv.classList.add("visible");
+                document.getElementById("order-new-status").value = "";
+            } catch (err) {
+                showMsg("order-msg", err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Update Status";
             }
         });
     </script>

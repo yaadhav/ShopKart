@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .order-detail-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 800px) { .order-detail-layout { grid-template-columns: 1fr; } }
+
+        /* ── Status & Payment Info ────────────────── */
+        .info-section {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+            margin-bottom: 20px;
+        }
+        .info-section h3 {
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 12px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-row__label { color: #555; font-weight: 500; }
+        .info-row__value { font-weight: 600; color: var(--color-text); }
+
+        /* ── Status Badges ───────────────────────── */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: capitalize;
+        }
+        .status-badge--delivered { background: #e6f9ee; color: #1a8a4a; }
+        .status-badge--shipped { background: #e6f0ff; color: #1a6bba; }
+        .status-badge--initiated,
+        .status-badge--confirmed { background: #fff8e1; color: #b8860b; }
+        .status-badge--payment_failed,
+        .status-badge--cancelled { background: #fff0f0; color: #c0392b; }
+        .status-badge--payment_pending { background: #f0f0f0; color: #666; }
+
+        .payment-badge--paid { background: #e6f9ee; color: #1a8a4a; }
+        .payment-badge--failed { background: #fff0f0; color: #c0392b; }
+        .payment-badge--yet_to_be_paid { background: #fff8e1; color: #b8860b; }
+
+        /* ── Product Items (read-only) ──────────── */
+        .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .detail-header h2 { margin: 0; font-size: 18px; }
+        .detail-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-item__image {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        .detail-item__image img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-item__details { flex: 1; min-width: 0; }
+        .detail-item__name { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+        .detail-item__meta { font-size: 13px; color: #888; margin-bottom: 6px; }
+        .detail-item__info { font-size: 13px; color: #555; margin-bottom: 2px; }
+        .detail-item__right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+            min-width: 130px;
+        }
+        .detail-item__pricing { text-align: right; }
+        .detail-item__price { font-weight: 700; font-size: 16px; }
+        .detail-item__orig-disc { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 3px; }
+        .detail-item__original { text-decoration: line-through; color: #888; font-size: 13px; }
+        .detail-item__discount { color: #27ae60; font-size: 13px; font-weight: 600; }
+        .detail-item__savings { font-size: 13px; text-align: right; color: #27ae60; font-weight: 600; margin-top: 4px; }
+
+        /* ── Delivery Address ────────────────────── */
+        .address-section {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            background: #fff;
+            margin-bottom: 16px;
+        }
+        .address-section__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .address-section__header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+        .address-display p { margin: 0 0 3px; font-size: 14px; color: #444; line-height: 1.5; }
+        .address-display .addr-name { font-weight: 700; color: #222; font-size: 15px; }
+        .address-display .addr-contact { margin-top: 6px; font-weight: 600; color: #333; }
+
+        /* ── Order Panel ─────────────────────────── */
+        .order-panel {
+            position: sticky;
+            top: 20px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .order-panel h3 { margin: 0 0 16px; font-size: 16px; font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 12px; }
+        .order-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 10px; }
+        .order-row__label { color: #555; }
+        .order-row__value { font-weight: 600; }
+        .order-row--savings .order-row__value { color: #27ae60; }
+        .order-row--free .order-row__value { color: #27ae60; }
+        .order-divider { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
+        .order-total-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-bottom: 0; }
+        .convenience-label { font-size: 13px; font-weight: 600; color: #333; margin: 8px 0 4px; }
+        .convenience-sub { margin-left: 8px; }
+
+        /* ── Payment Info Section ─────────────────── */
+        .payment-info-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border);
+        }
+        .payment-info-section .info-row {
+            margin-bottom: 8px;
+        }
+        .payment-info-section .info-row:last-child { margin-bottom: 0; }
+
+        .empty-state { text-align: center; padding: 80px 20px; color: #888; }
+        .empty-state h2 { margin-bottom: 12px; color: #333; }
+        .empty-state a { color: #333; font-weight: 600; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--wide">
+        <div class="page-header">
+            <h1 id="page-title">Order Details</h1>
+        </div>
+        <div id="msg-area"></div>
+        <div id="order-content">
+            <p style="color:#888;">Loading order details...</p>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        function init() {
+            if (!requireAuth()) return;
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get("order_id");
+            if (!orderId) {
+                document.getElementById("order-content").innerHTML =
+                    '<div class="empty-state"><h2>No order specified</h2><p><a href="orders.html">View all orders</a></p></div>';
+                return;
+            }
+            loadOrderDetails(orderId);
+        }
+
+        function getStatusBadgeClass(status) {
+            const s = (status || "").toLowerCase();
+            if (s === "delivered") return "status-badge--delivered";
+            if (s === "shipped") return "status-badge--shipped";
+            if (s === "initiated" || s === "confirmed") return "status-badge--initiated";
+            if (s === "payment_failed" || s === "cancelled") return "status-badge--payment_failed";
+            if (s === "payment_pending") return "status-badge--payment_pending";
+            return "status-badge--payment_pending";
+        }
+
+        function getPaymentBadgeClass(status) {
+            const s = (status || "").toLowerCase();
+            if (s === "paid") return "payment-badge--paid";
+            if (s === "failed") return "payment-badge--failed";
+            return "payment-badge--yet_to_be_paid";
+        }
+
+        function formatTime(millis) {
+            if (!millis) return "—";
+            return new Date(millis).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function renderProductItem(p) {
+            const imageUrl = p.image_url ? SERVER + p.image_url : null;
+            const imageHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${p.product_name}">`
+                : `<div style="width:100%;height:100%;background:#eee;"></div>`;
+
+            return `
+                <div class="detail-item">
+                    <div class="detail-item__image">${imageHtml}</div>
+                    <div class="detail-item__details">
+                        <div class="detail-item__name">${p.product_name}</div>
+                        <div class="detail-item__meta">Size: ${p.size_formatted} · Qty: ${p.quantity}</div>
+                    </div>
+                    <div class="detail-item__right">
+                        <div class="detail-item__pricing">
+                            <div class="detail-item__price">${p.selling_price_formatted}</div>
+                            <div class="detail-item__orig-disc">
+                                ${p.original_price_formatted ? `<span class="detail-item__original">${p.original_price_formatted}</span>` : ""}
+                                ${p.discount_percentage_formatted ? `<span class="detail-item__discount">${p.discount_percentage_formatted}</span>` : ""}
+                            </div>
+                            ${p.savings_formatted ? `<div class="detail-item__savings">Saves ${p.savings_formatted}</div>` : ""}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function buildInfoSection(order) {
+            return `
+                <div class="info-section">
+                    <h3>Order Information</h3>
+                    <div class="info-row">
+                        <span class="info-row__label">Order Status</span>
+                        <span class="status-badge ${getStatusBadgeClass(order.order_status)}">${order.order_status_formatted}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-row__label">Payment Mode</span>
+                        <span class="info-row__value">${order.payment_mode_formatted}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-row__label">Payment Status</span>
+                        <span class="status-badge ${getPaymentBadgeClass(order.payment_status)}">${order.payment_status_formatted}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-row__label">Initiated</span>
+                        <span class="info-row__value">${formatTime(order.initiated_time)}</span>
+                    </div>
+                    ${order.delivered_time ? `
+                    <div class="info-row">
+                        <span class="info-row__label">Delivered</span>
+                        <span class="info-row__value">${formatTime(order.delivered_time)}</span>
+                    </div>` : ""}
+                </div>`;
+        }
+
+        function buildAddressSection(addr) {
+            if (!addr) return "";
+            const secondLine = addr.second_line ? `<p>${addr.second_line}</p>` : "";
+            const landmark = addr.landmark ? `<p>${addr.landmark}</p>` : "";
+            return `
+                <div class="address-section">
+                    <div class="address-section__header">
+                        <h3>Delivered To</h3>
+                    </div>
+                    <div class="address-display">
+                        <p class="addr-name">${addr.name}</p>
+                        <p>${addr.first_line}</p>
+                        ${secondLine}
+                        ${landmark}
+                        <p>${addr.city}, ${addr.state} - ${addr.pincode}</p>
+                        <p class="addr-contact">☎ ${addr.contact_number}</p>
+                    </div>
+                </div>`;
+        }
+
+        function buildOrderPanel(order) {
+            const isFreeDel = order.delivery_fee_formatted === "Free";
+            const deliveryDisplay = isFreeDel
+                ? `<span style="color:#27ae60;font-weight:600;">Free</span>`
+                : order.delivery_fee_formatted;
+
+            let paymentInfoHtml = "";
+            if (order.payment && order.payment_mode === "online") {
+                paymentInfoHtml = `
+                    <div class="payment-info-section">
+                        <div class="info-row">
+                            <span class="info-row__label">Reference ID</span>
+                            <span class="info-row__value">${order.payment.reference_id}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row__label">Payment Method</span>
+                            <span class="info-row__value">${order.payment.payment_method_formatted}</span>
+                        </div>
+                    </div>`;
+            }
+
+            return `
+                <div class="order-panel">
+                    <h3>Order Summary</h3>
+                    <div class="order-row">
+                        <span class="order-row__label">Order Amount</span>
+                        <span class="order-row__value">${order.order_amount_formatted}</span>
+                    </div>
+                    <div class="order-row order-row--savings">
+                        <span class="order-row__label">Order Savings</span>
+                        <span class="order-row__value">-${order.order_savings_formatted}</span>
+                    </div>
+                    <div class="convenience-label">Convenience Fee</div>
+                    <div class="convenience-sub">
+                        <div class="order-row ${isFreeDel ? 'order-row--free' : ''}">
+                            <span class="order-row__label">Delivery Fee</span>
+                            <span class="order-row__value">${deliveryDisplay}</span>
+                        </div>
+                        <div class="order-row">
+                            <span class="order-row__label">Platform Fee</span>
+                            <span class="order-row__value">${order.platform_fee_formatted}</span>
+                        </div>
+                    </div>
+                    <hr class="order-divider">
+                    <div class="order-total-row">
+                        <span>Order Total</span>
+                        <span>${order.order_total_formatted}</span>
+                    </div>
+                    ${paymentInfoHtml}
+                </div>`;
+        }
+
+        async function loadOrderDetails(orderId) {
+            const container = document.getElementById("order-content");
+            try {
+                const order = await apiCall(`/orders/${orderId}`);
+
+                document.getElementById("page-title").textContent = `Order #${order.order_id}`;
+                document.title = `Order #${order.order_id} – ShopKart`;
+
+                const productsHtml = (order.products || []).map(renderProductItem).join("");
+                const infoHtml = buildInfoSection(order);
+                const addressHtml = buildAddressSection(order.address);
+                const orderPanelHtml = buildOrderPanel(order);
+
+                container.innerHTML = `
+                    <div class="order-detail-layout">
+                        <div>
+                            ${infoHtml}
+                            <div class="detail-header">
+                                <h2>Products (${(order.products || []).length} item${(order.products || []).length !== 1 ? 's' : ''})</h2>
+                            </div>
+                            <div id="product-items">${productsHtml}</div>
+                        </div>
+                        <div>
+                            ${addressHtml}
+                            ${orderPanelHtml}
+                        </div>
+                    </div>`;
+            } catch (err) {
+                container.innerHTML =
+                    `<div class="empty-state"><h2>Failed to load order</h2><p>${err.message}</p><p><a href="orders.html">Back to orders</a></p></div>`;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

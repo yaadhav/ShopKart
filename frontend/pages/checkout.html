@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 800px) { .checkout-layout { grid-template-columns: 1fr; } }
+
+        /* ── Payment Options ────────────────────── */
+        .payment-options {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .payment-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            transition: border-color 0.15s, background 0.15s;
+            user-select: none;
+        }
+        .payment-option:hover { border-color: #aaa; }
+        .payment-option.active {
+            border-color: #333;
+            background: #f9f9f9;
+        }
+        .payment-option .radio-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .payment-option.active .radio-dot {
+            border-color: #333;
+        }
+        .payment-option.active .radio-dot::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #333;
+        }
+
+        /* ── Product Items (read-only) ──────────── */
+        .checkout-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .checkout-header h2 { margin: 0; font-size: 18px; }
+        .checkout-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .checkout-item:last-child { border-bottom: none; }
+        .checkout-item__image {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        .checkout-item__image img { width: 100%; height: 100%; object-fit: cover; }
+        .checkout-item__details { flex: 1; min-width: 0; }
+        .checkout-item__name { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+        .checkout-item__meta { font-size: 13px; color: #888; margin-bottom: 6px; }
+        .checkout-item__info { font-size: 13px; color: #555; margin-bottom: 2px; }
+        .checkout-item__right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+            min-width: 130px;
+        }
+        .checkout-item__pricing { text-align: right; }
+        .checkout-item__price { font-weight: 700; font-size: 16px; }
+        .checkout-item__orig-disc { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 3px; }
+        .checkout-item__original { text-decoration: line-through; color: #888; font-size: 13px; }
+        .checkout-item__discount { color: #27ae60; font-size: 13px; font-weight: 600; }
+        .checkout-item__savings { font-size: 15px; text-align: right; }
+        .oos-badge {
+            display: inline-block;
+            background: #fff0f0;
+            color: #c0392b;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #f5c6c6;
+            border-radius: 3px;
+            padding: 2px 7px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Delivery Address ────────────────────── */
+        .address-section {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            background: #fff;
+            margin-bottom: 16px;
+        }
+        .address-section__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .address-section__header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+        .btn-change {
+            padding: 5px 14px;
+            border: 1.5px solid #333;
+            border-radius: 4px;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #333;
+        }
+        .btn-change:hover { background: #f5f5f5; }
+        .address-display p { margin: 0 0 3px; font-size: 14px; color: #444; line-height: 1.5; }
+        .address-display .addr-name { font-weight: 700; color: #222; font-size: 15px; }
+        .address-display .addr-contact { margin-top: 6px; font-weight: 600; color: #333; }
+
+        /* ── Order Panel (same as cart) ──────────── */
+        .order-panel {
+            position: sticky;
+            top: 20px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .order-panel h3 { margin: 0 0 16px; font-size: 16px; font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 12px; }
+        .order-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 10px; }
+        .order-row__label { color: #555; }
+        .order-row__value { font-weight: 600; }
+        .order-row--savings .order-row__value { color: #27ae60; }
+        .order-row--free .order-row__value { color: #27ae60; }
+        .order-divider { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
+        .order-total-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+        .convenience-label { font-size: 13px; font-weight: 600; color: #333; margin: 8px 0 4px; }
+        .convenience-sub { margin-left: 8px; }
+        .btn-proceed {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .btn-proceed:hover { background: #555; }
+
+        .empty-state { text-align: center; padding: 80px 20px; color: #888; }
+        .empty-state h2 { margin-bottom: 12px; color: #333; }
+        .empty-state a { color: #333; font-weight: 600; text-decoration: underline; }
+
+        /* ── Address Selection Modal ─────────────── */
+        .addr-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .addr-modal-overlay.open { display: flex; }
+        .addr-modal {
+            background: #fff;
+            border-radius: 10px;
+            width: 480px;
+            max-width: 92vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+        }
+        .addr-modal__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .addr-modal__header h3 { margin: 0; font-size: 17px; font-weight: 700; }
+        .addr-modal__close {
+            font-size: 22px;
+            cursor: pointer;
+            color: #888;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+        .addr-modal__close:hover { color: #333; }
+        .addr-modal__body { padding: 12px 20px 20px; }
+        .addr-select-card {
+            padding: 14px 16px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .addr-select-card:last-child { margin-bottom: 0; }
+        .addr-select-card:hover { border-color: #aaa; }
+        .addr-select-card.selected {
+            border-color: #333;
+            background: #f9f9f9;
+        }
+        .addr-select-card p { margin: 0 0 2px; font-size: 13px; color: #444; line-height: 1.45; }
+        .addr-select-card .addr-card-name {
+            font-weight: 700;
+            color: #222;
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge-default {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Success / Error Popup ───────────────── */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-overlay.open { display: flex; }
+        .result-popup {
+            background: #fff;
+            border-radius: 12px;
+            padding: 36px 48px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+        }
+        .result-popup .icon { font-size: 48px; margin-bottom: 12px; }
+        .result-popup .msg { font-size: 18px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="container container--wide">
+        <div class="page-header">
+            <h1>Checkout</h1>
+        </div>
+        <div id="msg-area"></div>
+        <div id="checkout-content">
+            <p style="color:#888;">Loading checkout...</p>
+        </div>
+    </div>
+
+    <!-- Address Selection Modal -->
+    <div class="addr-modal-overlay" id="addr-modal-overlay">
+        <div class="addr-modal">
+            <div class="addr-modal__header">
+                <h3>Select Delivery Address</h3>
+                <button class="addr-modal__close" onclick="closeAddrModal()">&times;</button>
+            </div>
+            <div class="addr-modal__body" id="addr-modal-list">
+                <p style="color:#888;text-align:center;">Loading addresses...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="result-overlay" id="result-overlay">
+        <div class="result-popup">
+            <div class="icon" id="result-icon"></div>
+            <div class="msg" id="result-msg"></div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let cartData = null;
+        let addresses = [];
+        let selectedAddressId = null;
+        let selectedAddress = null;
+        let paymentMode = 'online'; // default
+
+        async function init() {
+            if (!requireAuth()) return;
+            await Promise.all([loadCart(), loadAddresses()]);
+            render();
+        }
+
+        async function loadCart() {
+            try {
+                cartData = await apiCall('/cart');
+            } catch (e) {
+                cartData = null;
+            }
+        }
+
+        async function loadAddresses() {
+            try {
+                addresses = await apiCall('/address');
+                if (addresses && addresses.length > 0) {
+                    const def = addresses.find(a => a.is_default) || addresses[0];
+                    selectedAddressId = def.address_id;
+                    selectedAddress = def;
+                }
+            } catch (e) {
+                addresses = [];
+            }
+        }
+
+        function render() {
+            const container = document.getElementById('checkout-content');
+            if (!cartData || !cartData.cart_products || cartData.cart_products.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Your cart is empty</h2>
+                        <p>Add items to get started.</p>
+                        <a href="products.html">Browse Products</a>
+                    </div>`;
+                return;
+            }
+            if (!selectedAddress) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No delivery address found</h2>
+                        <p>Please add an address in your <a href="account.html">Account</a> settings.</p>
+                    </div>`;
+                return;
+            }
+
+            const products = cartData.cart_products;
+            const hasOOS = products.some(p => p.quantity_formatted === 'Out of Stock');
+
+            container.innerHTML = `
+                <div class="checkout-layout">
+                    <div>
+                        ${buildPaymentOptions()}
+                        <div class="checkout-header">
+                            <h2>Products (${products.length} item${products.length !== 1 ? 's' : ''})</h2>
+                        </div>
+                        <div id="checkout-items">${products.map(buildCheckoutItem).join('')}</div>
+                    </div>
+                    <div>
+                        ${buildAddressSection()}
+                        ${buildOrderPanel(cartData, hasOOS)}
+                    </div>
+                </div>`;
+        }
+
+        /* ── Payment Options ─────────────────── */
+        function buildPaymentOptions() {
+            return `
+                <div class="payment-options">
+                    <div class="payment-option ${paymentMode === 'online' ? 'active' : ''}" onclick="selectPayment('online')">
+                        <span class="radio-dot"></span> Pay Online
+                    </div>
+                    <div class="payment-option ${paymentMode === 'cash_on_delivery' ? 'active' : ''}" onclick="selectPayment('cash_on_delivery')">
+                        <span class="radio-dot"></span> Pay on Delivery
+                    </div>
+                </div>`;
+        }
+
+        function selectPayment(mode) {
+            paymentMode = mode;
+            render();
+        }
+
+        /* ── Product Item (read-only) ────────── */
+        function buildCheckoutItem(p) {
+            const imageUrl = p.image ? SERVER + p.image : null;
+            const imageHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${p.name}">`
+                : `<div style="width:100%;height:100%;background:#eee;"></div>`;
+
+            const isOOS = p.quantity_formatted === 'Out of Stock';
+            const oosBadge = isOOS ? `<div class="oos-badge">OUT OF STOCK</div>` : '';
+
+            const rightPanel = isOOS ? `
+                <div class="checkout-item__right">
+                    <div class="checkout-item__pricing">
+                        <div class="checkout-item__price">${p.selling_price_formatted || ''}</div>
+                        <div class="checkout-item__orig-disc">
+                            ${p.original_price_formatted ? `<span class="checkout-item__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.discount_percentage_formatted ? `<span class="checkout-item__discount">${p.discount_percentage_formatted}</span>` : ''}
+                        </div>
+                    </div>
+                </div>` : `
+                <div class="checkout-item__right">
+                    <div class="checkout-item__pricing">
+                        <div class="checkout-item__price">${p.selling_price_formatted}</div>
+                        <div class="checkout-item__orig-disc">
+                            ${p.original_price_formatted ? `<span class="checkout-item__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.discount_percentage_formatted ? `<span class="checkout-item__discount">${p.discount_percentage_formatted}</span>` : ''}
+                        </div>
+                        <div class="checkout-item__savings">Saves ${p.item_savings_formatted}</div>
+                    </div>
+                </div>`;
+
+            return `
+                <div class="checkout-item">
+                    <div class="checkout-item__image">${imageHtml}</div>
+                    <div class="checkout-item__details">
+                        ${oosBadge}
+                        <div class="checkout-item__name">${p.name}</div>
+                        <div class="checkout-item__meta">${p.fashion_style_formatted} · ${p.brand_formatted}</div>
+                        <div class="checkout-item__info">Size: ${p.size_formatted || p.size}</div>
+                        <div class="checkout-item__info">Qty: ${p.quantity}</div>
+                    </div>
+                    ${rightPanel}
+                </div>`;
+        }
+
+        /* ── Delivery Address ────────────────── */
+        function buildAddressSection() {
+            const a = selectedAddress;
+            if (!a) return '';
+            const landmark = a.landmark ? `<p>${a.landmark}</p>` : '';
+            return `
+                <div class="address-section">
+                    <div class="address-section__header">
+                        <h3>Delivering To</h3>
+                        <button class="btn-change" onclick="openAddrModal()">Change</button>
+                    </div>
+                    <div class="address-display">
+                        <p class="addr-name">${a.name}</p>
+                        <p>${a.first_line}, ${a.second_line}</p>
+                        ${landmark}
+                        <p>${a.city}, ${a.state} - ${a.pincode}</p>
+                        <p class="addr-contact">+91 ${a.contact_number}</p>
+                    </div>
+                </div>`;
+        }
+
+        /* ── Address Modal ───────────────────── */
+        function openAddrModal() {
+            const overlay = document.getElementById('addr-modal-overlay');
+            const list = document.getElementById('addr-modal-list');
+
+            if (!addresses || addresses.length === 0) {
+                list.innerHTML = `<p style="color:#888;text-align:center;">No addresses found. <a href="account.html">Add one</a>.</p>`;
+            } else {
+                list.innerHTML = addresses.map(a => {
+                    const isSelected = a.address_id === selectedAddressId;
+                    const landmark = a.landmark ? `<p>${a.landmark}</p>` : '';
+                    const defBadge = a.is_default ? `<span class="badge-default">Default</span>` : '';
+                    return `
+                        <div class="addr-select-card ${isSelected ? 'selected' : ''}" onclick="pickAddress(${a.address_id})">
+                            <div class="addr-card-name">${a.name} ${defBadge}</div>
+                            <p>${a.first_line}, ${a.second_line}</p>
+                            ${landmark}
+                            <p>${a.city}, ${a.state} - ${a.pincode}</p>
+                            <p style="margin-top:4px;font-weight:600;">+91 ${a.contact_number}</p>
+                        </div>`;
+                }).join('');
+            }
+
+            overlay.classList.add('open');
+        }
+
+        function closeAddrModal() {
+            document.getElementById('addr-modal-overlay').classList.remove('open');
+        }
+
+        function pickAddress(id) {
+            selectedAddressId = id;
+            selectedAddress = addresses.find(a => a.address_id === id);
+            closeAddrModal();
+            render();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('addr-modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) closeAddrModal();
+        });
+
+        /* ── Order Details Panel ─────────────── */
+        function buildOrderPanel(data, hasOOS) {
+            const fee = data.convenience_fee || {};
+            const isFreeDel = fee.delivery_fee_formatted === 'Free';
+            const deliveryDisplay = isFreeDel
+                ? `<span style="color:#27ae60;font-weight:600;">Free</span>`
+                : fee.delivery_fee_formatted;
+
+            const btnLabel = paymentMode === 'online' ? 'PROCEED TO PAYMENT' : 'PLACE ORDER';
+            const proceedBtn = hasOOS
+                ? `<button class="btn-proceed" disabled style="background:#ccc;cursor:not-allowed;opacity:0.7;">ITEMS OUT OF STOCK</button>`
+                : `<button class="btn-proceed" onclick="proceedOrder()">${btnLabel}</button>`;
+
+            return `
+                <div class="order-panel">
+                    <h3>Order Details</h3>
+                    <div class="order-row">
+                        <span class="order-row__label">Cart Total</span>
+                        <span class="order-row__value">${data.order_amount_formatted}</span>
+                    </div>
+                    <div class="order-row order-row--savings">
+                        <span class="order-row__label">Cart Savings</span>
+                        <span class="order-row__value">-${data.order_savings_formatted}</span>
+                    </div>
+                    <div class="convenience-label">Convenience Fee</div>
+                    <div class="convenience-sub">
+                        <div class="order-row ${isFreeDel ? 'order-row--free' : ''}">
+                            <span class="order-row__label">Delivery Fee</span>
+                            <span class="order-row__value">${deliveryDisplay}</span>
+                        </div>
+                        <div class="order-row">
+                            <span class="order-row__label">Platform Fee</span>
+                            <span class="order-row__value">${fee.platform_fee_formatted}</span>
+                        </div>
+                    </div>
+                    <hr class="order-divider">
+                    <div class="order-total-row">
+                        <span>Order Total</span>
+                        <span>${data.order_total_formatted}</span>
+                    </div>
+                    ${proceedBtn}
+                </div>`;
+        }
+
+        /* ── Proceed ─────────────────────────── */
+        async function proceedOrder() {
+            if (!selectedAddressId) {
+                showMsg('msg-area', 'Please select a delivery address.', 'error');
+                return;
+            }
+
+            try {
+                const resp = await apiCall('/orders', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        address_id: selectedAddressId,
+                        payment_mode: paymentMode
+                    })
+                });
+
+                if (paymentMode === 'cash_on_delivery') {
+                    showResultPopup('✓', 'Order placed successfully!', 'green');
+                    setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
+                } else {
+                    // Store order_total for payment page
+                    localStorage.setItem('order_total', cartData.order_total);
+                    window.location.href = `payment.html?order_id=${resp.order_id}&payment_intent_id=${resp.payment_intent_id}`;
+                }
+            } catch (e) {
+                showMsg('msg-area', 'Failed to place order: ' + e.message, 'error');
+            }
+        }
+
+        function showResultPopup(icon, msg, color) {
+            document.getElementById('result-icon').textContent = icon;
+            document.getElementById('result-icon').style.color = color;
+            document.getElementById('result-msg').textContent = msg;
+            document.getElementById('result-overlay').classList.add('open');
+        }
+
+        init();
+    </script>
+</body>
+</html>

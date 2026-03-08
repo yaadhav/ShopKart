@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ── Search Bar ──────────────────────────── */
+        .search-section {
+            margin-bottom: 20px;
+        }
+        .search-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .search-controls input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-family: var(--font);
+            color: var(--color-text);
+            background: var(--color-bg);
+        }
+        .search-controls input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+        .btn-search {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border: 1px solid #000;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .btn-search:hover {
+            background: #222;
+        }
+
+        /* ── Order Cards ─────────────────────────── */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .order-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .order-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .order-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .order-card__id {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--color-text);
+        }
+
+        /* ── Status Badges ───────────────────────── */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: capitalize;
+        }
+        .status-badge--delivered { background: #e6f9ee; color: #1a8a4a; }
+        .status-badge--shipped { background: #e6f0ff; color: #1a6bba; }
+        .status-badge--initiated,
+        .status-badge--confirmed { background: #fff8e1; color: #b8860b; }
+        .status-badge--payment_failed,
+        .status-badge--cancelled { background: #fff0f0; color: #c0392b; }
+        .status-badge--payment_pending { background: #f0f0f0; color: #666; }
+
+        /* ── Product Thumbnails ──────────────────── */
+        .order-card__products {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .order-card__products::-webkit-scrollbar { height: 4px; }
+        .order-card__products::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+        .order-product-thumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            padding: 8px 12px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+        }
+        .order-product-thumb__image {
+            width: 56px;
+            height: 56px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #f5f5f5;
+            flex-shrink: 0;
+        }
+        .order-product-thumb__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .order-product-thumb__info {
+            min-width: 0;
+        }
+        .order-product-thumb__name {
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+        .order-product-thumb__meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* ── Order Footer ────────────────────────── */
+        .order-card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border);
+        }
+        .order-card__total {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .order-card__date {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* ── Load More ───────────────────────────── */
+        .load-more-wrapper {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .btn-load-more {
+            padding: 10px 32px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-load-more:hover {
+            background: #222;
+        }
+        .btn-load-more:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="products-container">
+        <aside class="products-sidebar">
+            <div class="sidebar-header">
+                <h3>Orders</h3>
+                <button class="btn-clear-all" onclick="clearAllFilters()">Clear All</button>
+            </div>
+
+            <div class="search-section">
+                <div class="search-controls">
+                    <input type="text" id="f-order-id" placeholder="Search by Order ID" onkeydown="if(event.key==='Enter') loadOrders(0, true)">
+                    <button class="btn-search" onclick="loadOrders(0, true)" title="Search">⌕</button>
+                </div>
+            </div>
+
+            <div class="sort-section">
+                <div class="sort-controls">
+                    <select id="f-sort_by" class="filter-select" onchange="loadOrders(0, true)">
+                        <option value="initiated_time">Initiated Time</option>
+                        <option value="delivered_time">Delivered Time</option>
+                    </select>
+                    <button class="btn-sort-toggle" id="sort-order-btn" onclick="toggleSortOrder()" title="Toggle sort order">
+                        <span id="sort-order-icon">↓</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-divider"></div>
+
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('order_status')">
+                    <span class="filter-collapse-icon" id="collapse-icon-order_status">›</span>
+                    <h4 class="filter-section-title">Order Status</h4>
+                </div>
+                <div id="filter-order_status" class="filter-checkboxes"></div>
+            </div>
+        </aside>
+
+        <main class="products-main">
+            <div class="page-header" style="padding: 0 0 16px;">
+                <h1>My Orders</h1>
+            </div>
+            <div id="order-list" class="order-list"></div>
+            <div id="msg" class="empty-state" style="display:none;"></div>
+            <div id="load-more-area" class="load-more-wrapper" style="display:none;">
+                <button class="btn-load-more" id="btn-load-more" onclick="loadMore()">Load More</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let sortOrder = "desc";
+        let currentPage = 0;
+        let hasNextPage = false;
+
+        const ORDER_STATUSES = [
+            { name: "initiated", display_name: "Initiated" },
+            { name: "payment_pending", display_name: "Payment Pending" },
+            { name: "payment_failed", display_name: "Payment Failed" },
+            { name: "confirmed", display_name: "Confirmed" },
+            { name: "shipped", display_name: "Shipped" },
+            { name: "delivered", display_name: "Delivered" },
+            { name: "cancelled", display_name: "Cancelled" }
+        ];
+
+        function init() {
+            if (!requireAuth()) return;
+            populateFilterCheckboxes();
+            loadOrders(0, true);
+        }
+
+        function populateFilterCheckboxes() {
+            const container = document.getElementById("filter-order_status");
+            container.innerHTML = "";
+            ORDER_STATUSES.forEach(item => {
+                const label = document.createElement("label");
+                label.className = "filter-checkbox";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = item.name;
+                checkbox.dataset.filterKey = "order_status";
+                checkbox.addEventListener("change", () => loadOrders(0, true));
+                const span = document.createElement("span");
+                span.textContent = item.display_name;
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        }
+
+        function toggleSortOrder() {
+            sortOrder = sortOrder === "asc" ? "desc" : "asc";
+            document.getElementById("sort-order-icon").textContent = sortOrder === "asc" ? "↑" : "↓";
+            loadOrders(0, true);
+        }
+
+        function toggleFilterSection(filterKey) {
+            const checkboxContainer = document.getElementById(`filter-${filterKey}`);
+            const icon = document.getElementById(`collapse-icon-${filterKey}`);
+            if (checkboxContainer.style.display === "none") {
+                checkboxContainer.style.display = "block";
+                icon.style.transform = "rotate(90deg)";
+            } else {
+                checkboxContainer.style.display = "none";
+                icon.style.transform = "rotate(0deg)";
+            }
+        }
+
+        function clearAllFilters() {
+            document.querySelectorAll(".filter-checkboxes input[type=checkbox]").forEach(cb => cb.checked = false);
+            document.getElementById("f-sort_by").selectedIndex = 0;
+            document.getElementById("f-order-id").value = "";
+            sortOrder = "desc";
+            document.getElementById("sort-order-icon").textContent = "↓";
+            loadOrders(0, true);
+        }
+
+        function buildParams(page) {
+            const params = new URLSearchParams();
+            params.set("page", page);
+            params.set("page_size", "10");
+
+            const sortBy = document.getElementById("f-sort_by").value;
+            if (sortBy) {
+                params.set("sort_by", sortBy);
+                params.set("sort_order", sortOrder);
+            }
+
+            const orderId = document.getElementById("f-order-id").value.trim();
+            if (orderId) {
+                params.set("order_id", orderId);
+            }
+
+            const checked = document.querySelectorAll('#filter-order_status input[type=checkbox]:checked');
+            if (checked.length > 0) {
+                const values = Array.from(checked).map(cb => cb.value).join(",");
+                params.set("order_status", values);
+            }
+
+            return params;
+        }
+
+        function getStatusBadgeClass(status) {
+            const s = (status || "").toLowerCase();
+            if (s === "delivered") return "status-badge--delivered";
+            if (s === "shipped") return "status-badge--shipped";
+            if (s === "initiated" || s === "confirmed") return "status-badge--initiated";
+            if (s === "payment_failed" || s === "cancelled") return "status-badge--payment_failed";
+            if (s === "payment_pending") return "status-badge--payment_pending";
+            return "status-badge--payment_pending";
+        }
+
+        function formatTime(millis) {
+            if (!millis) return "—";
+            return new Date(millis).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function renderOrderCard(order) {
+            const productsHtml = (order.products || []).map(p => {
+                const imageUrl = p.image_url ? SERVER + p.image_url : null;
+                const imageHtml = imageUrl
+                    ? `<img src="${imageUrl}" alt="${p.product_name}">`
+                    : `<div style="width:100%;height:100%;background:#eee;"></div>`;
+                return `
+                    <div class="order-product-thumb">
+                        <div class="order-product-thumb__image">${imageHtml}</div>
+                        <div class="order-product-thumb__info">
+                            <div class="order-product-thumb__name">${p.product_name}</div>
+                            <div class="order-product-thumb__meta">${p.size_formatted} · Qty: ${p.quantity}</div>
+                        </div>
+                    </div>`;
+            }).join("");
+
+            return `
+                <div class="order-card" onclick="window.location.href='order-details.html?order_id=${order.order_id}'">
+                    <div class="order-card__header">
+                        <span class="order-card__id">Order #${order.order_id}</span>
+                        <span class="status-badge ${getStatusBadgeClass(order.order_status)}">${order.order_status_formatted}</span>
+                    </div>
+                    <div class="order-card__products">${productsHtml}</div>
+                    <div class="order-card__footer">
+                        <span class="order-card__total">${order.order_total_formatted}</span>
+                        <span class="order-card__date">${formatTime(order.initiated_time)}</span>
+                    </div>
+                </div>`;
+        }
+
+        async function loadOrders(page = 0, reset = false) {
+            const list = document.getElementById("order-list");
+            const msg = document.getElementById("msg");
+            const loadMoreArea = document.getElementById("load-more-area");
+
+            if (reset) {
+                list.innerHTML = "";
+                currentPage = 0;
+            }
+
+            msg.style.display = "none";
+            loadMoreArea.style.display = "none";
+
+            try {
+                const data = await apiCall("/orders?" + buildParams(page).toString());
+                const orders = data.content || [];
+
+                if (orders.length === 0 && page === 0) {
+                    msg.style.display = "block";
+                    msg.innerHTML = "<p>No orders found.</p>";
+                    return;
+                }
+
+                list.innerHTML += orders.map(renderOrderCard).join("");
+
+                currentPage = data.page_details.page;
+                hasNextPage = data.page_details.has_next;
+
+                if (hasNextPage) {
+                    loadMoreArea.style.display = "block";
+                }
+            } catch (err) {
+                msg.style.display = "block";
+                msg.innerHTML = `<p>${err.message}</p>`;
+            }
+        }
+
+        function loadMore() {
+            if (hasNextPage) {
+                loadOrders(currentPage + 1, false);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment – ShopKart</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { background: #f7f7f8; }
+        .payment-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .payment-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 48px 56px;
+            text-align: center;
+            max-width: 440px;
+            width: 100%;
+        }
+
+        /* ── Timer ───────────────────────────── */
+        .timer {
+            font-size: 56px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #222;
+        }
+        .timer.expired { color: #c0392b; }
+
+        /* ── Spinner ─────────────────────────── */
+        .spinner-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid #e5e5e5;
+            border-top-color: #333;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-wrap .caption {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* ── Warning ─────────────────────────── */
+        .warning {
+            color: #c0392b;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        /* ── Order Info ──────────────────────── */
+        .order-info {
+            border-top: 1px solid var(--color-border);
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+        .order-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .order-info-row span:last-child { font-weight: 600; color: #222; }
+
+        /* ── Result Popup ────────────────────── */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-overlay.open { display: flex; }
+        .result-popup {
+            background: #fff;
+            border-radius: 12px;
+            padding: 36px 48px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+        }
+        .result-popup .icon { font-size: 48px; margin-bottom: 12px; }
+        .result-popup .msg { font-size: 18px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">ShopKart</a>
+        <div class="navbar-links" id="auth-links"></div>
+    </nav>
+
+    <div class="payment-wrapper">
+        <div class="payment-card">
+            <div class="timer" id="timer">5:00</div>
+            <div class="spinner-wrap" id="spinner-section">
+                <div class="spinner"></div>
+                <span class="caption">Processing your payment...</span>
+            </div>
+            <div class="warning">⚠ Do not close or go back</div>
+            <div class="order-info" id="order-info"></div>
+        </div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="result-overlay" id="result-overlay">
+        <div class="result-popup">
+            <div class="icon" id="result-icon"></div>
+            <div class="msg" id="result-msg"></div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        const INBOUND_SECRET = 'sk_verify_ShopKart_1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d';
+
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('order_id');
+        const paymentIntentId = params.get('payment_intent_id');
+        const orderTotal = parseFloat(localStorage.getItem('order_total')) || 0;
+
+        let timerSeconds = 5 * 60; // 5 minutes
+        let timerInterval = null;
+        let paymentDone = false;
+        let cancelled = false;
+
+        function init() {
+            if (!orderId || !paymentIntentId) {
+                document.querySelector('.payment-card').innerHTML =
+                    `<p style="color:#c0392b;font-weight:600;">Invalid payment session. Missing order or payment info.</p>
+                     <p style="margin-top:12px;"><a href="orders.html" style="color:#333;font-weight:600;text-decoration:underline;">Go to Orders</a></p>`;
+                return;
+            }
+
+            renderOrderInfo();
+            startTimer();
+
+            // Simulate payment after 3 seconds
+            setTimeout(simulatePayment, 3000);
+        }
+
+        function renderOrderInfo() {
+            const info = document.getElementById('order-info');
+            const amountDisplay = orderTotal ? `₹${orderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—';
+            info.innerHTML = `
+                <div class="order-info-row">
+                    <span>Order ID</span>
+                    <span>#${orderId}</span>
+                </div>
+                <div class="order-info-row">
+                    <span>Amount</span>
+                    <span>${amountDisplay}</span>
+                </div>`;
+        }
+
+        /* ── Timer ───────────────────────────── */
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    onTimerExpired();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            const el = document.getElementById('timer');
+            el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            if (timerSeconds <= 30) el.classList.add('expired');
+        }
+
+        async function onTimerExpired() {
+            if (paymentDone || cancelled) return;
+            cancelled = true;
+
+            document.getElementById('spinner-section').innerHTML =
+                `<span class="caption" style="color:#c0392b;">Payment session expired</span>`;
+
+            try {
+                await apiCall('/orders/cancel-payment', {
+                    method: 'POST',
+                    body: JSON.stringify({ payment_intent_id: parseInt(paymentIntentId) })
+                });
+            } catch (e) { /* best effort */ }
+
+            showResult('⏱', 'Payment Session Expired', '#c0392b');
+            setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
+        }
+
+        /* ── Simulate Payment ────────────────── */
+        async function simulatePayment() {
+            if (paymentDone || cancelled) return;
+
+            const refId = 'PG_' + Math.random().toString(36).substring(2, 15);
+
+            try {
+                const resp = await apiCall('/payment/record', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        secret_key: INBOUND_SECRET,
+                        payment_intent_id: parseInt(paymentIntentId),
+                        payment_method: 'upi',
+                        amount_paid: orderTotal,
+                        reference_id: refId,
+                        success: true
+                    })
+                });
+
+                paymentDone = true;
+                clearInterval(timerInterval);
+                localStorage.removeItem('order_total');
+
+                showResult('✓', 'Payment Successful!', '#27ae60');
+                setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
+
+            } catch (e) {
+                paymentDone = true;
+                clearInterval(timerInterval);
+                localStorage.removeItem('order_total');
+
+                showResult('✗', 'Payment Failed', '#c0392b');
+                setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
+            }
+        }
+
+        /* ── Result Popup ────────────────────── */
+        function showResult(icon, msg, color) {
+            document.getElementById('result-icon').textContent = icon;
+            document.getElementById('result-icon').style.color = color;
+            document.getElementById('result-msg').textContent = msg;
+            document.getElementById('result-overlay').classList.add('open');
+        }
+
+        /* ── Page Close / Visibility ─────────── */
+        function sendCancelBeacon() {
+            if (paymentDone || cancelled) return;
+            cancelled = true;
+            const payload = JSON.stringify({ payment_intent_id: parseInt(paymentIntentId) });
+            const blob = new Blob([payload], { type: 'application/json' });
+            navigator.sendBeacon(API + '/orders/cancel-payment', blob);
+        }
+
+        window.addEventListener('beforeunload', sendCancelBeacon);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                sendCancelBeacon();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

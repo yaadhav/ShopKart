@@ -15,6 +15,11 @@ public final class Constants {
         public static final String CLAIM_ROLE = "role";
     }
 
+    public static final class Sort {
+        public static final String DESC = "desc";
+        public static final String ASC = "asc";
+    }
+
     public static final class Phrases {
         public static final String FREE = "Free";
         public static final String CUSTOMERS = "Customers";
