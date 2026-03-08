@@ -6,32 +6,81 @@
     <title>Admin Panel – ShopKart</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 56px); }
+        .admin-sidebar {
+            width: 220px;
+            background: #111;
+            flex-shrink: 0;
+            position: sticky;
+            top: 56px;
+            height: calc(100vh - 56px);
+            overflow-y: auto;
+        }
+        .admin-content {
+            flex: 1;
+            padding: 32px 40px;
+            overflow-y: auto;
+            max-height: calc(100vh - 56px);
+        }
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            padding: 24px 20px 8px;
+        }
+        .sidebar-role {
+            font-size: 13px;
+            color: #777;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #222;
+            margin-bottom: 8px;
+        }
+        .sidebar-nav { display: flex; flex-direction: column; }
+        .sidebar-tab {
+            display: none;
+            padding: 10px 20px;
+            color: #999;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+        .sidebar-tab:hover { color: #fff; background: rgba(255,255,255,0.05); text-decoration: none; }
+        .sidebar-tab.active { color: #fff; background: rgba(255,255,255,0.08); border-left-color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-content > h2 { font-size: 24px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.3px; }
+        .product-tabs-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .product-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--color-badge-bg);
+            color: var(--color-text);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font);
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .product-tab:hover { background: var(--color-border); }
+        .product-tab.active { background: var(--color-accent); color: #fff; }
+        .product-content { display: none; }
+        .product-content.active { display: block; }
         .stock-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px;
             margin-top: 8px;
         }
-        .stock-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .stock-item label {
-            font-size: 13px;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        .stock-item input {
-            padding: 6px 8px;
-            font-size: 14px;
-        }
-        .image-preview-container {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
+        .stock-item { display: flex; flex-direction: column; gap: 4px; }
+        .stock-item label { font-size: 13px; font-weight: 500; text-transform: uppercase; }
+        .stock-item input { padding: 6px 8px; font-size: 14px; }
+        .image-preview-container { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
         .image-preview {
             position: relative;
             width: 100px;
@@ -40,16 +89,12 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
         .image-preview .remove-btn {
             position: absolute;
             top: 4px;
             right: 4px;
-            background: rgba(255, 0, 0, 0.8);
+            background: rgba(255,0,0,0.8);
             color: white;
             border: none;
             border-radius: 50%;
@@ -59,34 +104,12 @@
             font-size: 16px;
             line-height: 1;
         }
-        .details-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid #eee;
-        }
-        .section-subtitle {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-        }
-
-        /* ── Order Management ─────────────────────── */
-        .order-status-form {
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        .order-status-form .form-group {
-            margin-bottom: 0;
-        }
-        .order-status-form .form-group:first-child {
-            flex: 0 0 180px;
-        }
-        .order-status-form .form-group:nth-child(2) {
-            flex: 0 0 200px;
-        }
+        .details-section { margin-top: 24px; padding-top: 24px; border-top: 2px solid #eee; }
+        .section-subtitle { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #333; }
+        .order-status-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+        .order-status-form .form-group { margin-bottom: 0; }
+        .order-status-form .form-group:first-child { flex: 0 0 180px; }
+        .order-status-form .form-group:nth-child(2) { flex: 0 0 200px; }
         .order-result {
             margin-top: 20px;
             padding: 16px;
@@ -96,15 +119,8 @@
             display: none;
         }
         .order-result.visible { display: block; }
-        .order-result-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            font-size: 14px;
-        }
-        .order-result-row strong {
-            min-width: 100px;
-        }
+        .order-result-row { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+        .order-result-row strong { min-width: 100px; }
         .status-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -121,6 +137,67 @@
         .status-badge--payment_failed,
         .status-badge--cancelled { background: #fff0f0; color: #c0392b; }
         .status-badge--payment_pending { background: #f0f0f0; color: #666; }
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: var(--font);
+            color: var(--color-text);
+            background: var(--color-surface);
+            resize: vertical;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        .lookup-row { display: flex; gap: 12px; align-items: flex-end; }
+        .lookup-row .form-group { flex: 0 0 200px; margin-bottom: 0; }
+        .oos-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .oos-row:hover { background: var(--color-bg); border-color: var(--color-accent); }
+        .oos-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--color-bg);
+            flex-shrink: 0;
+        }
+        .oos-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .oos-info { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+        .oos-info strong { font-size: 12px; color: var(--color-text-secondary); }
+        .order-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .order-detail-table th {
+            text-align: left;
+            padding: 8px 12px 8px 0;
+            border-bottom: 2px solid var(--color-border);
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .order-detail-table td {
+            padding: 10px 12px 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
         .msg--info { color: #1a6bba; }
     </style>
 </head>
@@ -130,497 +207,1207 @@
         <div class="navbar-links" id="auth-links"></div>
     </nav>
 
-    <div class="container">
-        <div class="page-header">
-            <h1>Admin Panel</h1>
-            <p id="role-info"></p>
-        </div>
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <p class="sidebar-title">Navigation</p>
+            <p class="sidebar-role" id="role-info"></p>
+            <nav class="sidebar-nav">
+                <a class="sidebar-tab" data-tab="create-admin">Create Admin</a>
+                <a class="sidebar-tab" data-tab="fee-details">Fee Details</a>
+                <a class="sidebar-tab" data-tab="user-lookup">User Lookup</a>
+                <a class="sidebar-tab" data-tab="order-management">Order Management</a>
+                <a class="sidebar-tab" data-tab="products">Products</a>
+            </nav>
+        </aside>
 
-        <!-- Owner: Create Admin -->
-        <div id="create-admin-section" class="section" style="display:none;">
-            <div class="card">
-                <h3 class="section-title">Create Admin Account</h3>
-                <form id="create-admin-form">
-                    <div class="form-group">
-                        <label for="admin-name">Name</label>
-                        <input type="text" id="admin-name" placeholder="Admin's full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="admin-email">Email</label>
-                        <input type="email" id="admin-email" placeholder="admin@shopkart.com" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Admin</button>
-                    <div id="msg" class="msg"></div>
-                </form>
+        <main class="admin-content">
 
-                <div id="credentials" class="cred-card" style="display:none;">
-                    <h3>Admin Created Successfully</h3>
-                    <p><strong>Name:</strong> <span id="cred-name"></span></p>
-                    <p><strong>Email:</strong> <span id="cred-email"></span></p>
-                    <p><strong>Password:</strong> <code id="cred-password"></code></p>
-                    <p class="cred-warning">⚠ Save this password now. It cannot be retrieved later.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin + Owner: Order Management -->
-        <div id="order-management-section" class="section" style="display:none;">
-            <div class="card">
-                <h3 class="section-title">Order Management</h3>
-                <p style="color:#666; margin-bottom:16px; font-size:14px;">Update the status of any order by entering its Order ID and selecting a new status.</p>
-                <form id="update-order-form">
-                    <div class="order-status-form">
+            <div id="content-create-admin" class="tab-content">
+                <h2>Create Admin Account</h2>
+                <div class="card">
+                    <form id="create-admin-form">
                         <div class="form-group">
-                            <label for="order-id-input">Order ID</label>
-                            <input type="number" id="order-id-input" placeholder="e.g. 1001" min="1" required>
+                            <label for="admin-name">Name</label>
+                            <input type="text" id="admin-name" placeholder="Admin's full name" required>
                         </div>
                         <div class="form-group">
-                            <label for="order-new-status">New Status</label>
-                            <select id="order-new-status" required>
-                                <option value="">Select status</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="cancelled">Cancelled</option>
+                            <label for="admin-email">Email</label>
+                            <input type="email" id="admin-email" placeholder="admin@shopkart.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-role">Role</label>
+                            <select id="admin-role" required>
+                                <option value="">Select role</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="update-order-btn">Update Status</button>
-                    </div>
-                    <div id="order-msg" class="msg"></div>
-                </form>
-                <div class="order-result" id="order-result">
-                    <div class="order-result-row">
-                        <strong>Order ID:</strong>
-                        <span id="result-order-id"></span>
-                    </div>
-                    <div class="order-result-row" style="margin-top:8px;">
-                        <strong>New Status:</strong>
-                        <span id="result-order-status" class="status-badge"></span>
+                        <button type="submit" class="btn btn-primary">Create Admin</button>
+                        <div id="create-admin-msg" class="msg"></div>
+                    </form>
+                    <div id="credentials" class="cred-card" style="display:none;">
+                        <h3>Admin Created Successfully</h3>
+                        <p><strong>Name:</strong> <span id="cred-name"></span></p>
+                        <p><strong>Email:</strong> <span id="cred-email"></span></p>
+                        <p><strong>Role:</strong> <span id="cred-role"></span></p>
+                        <p><strong>Password:</strong> <code id="cred-password"></code></p>
+                        <p class="cred-warning">⚠ Save this password now. It cannot be retrieved later.</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Admin + Owner: Add Product -->
-        <div id="add-product-section" class="section" style="display:none;">
-            <div class="card">
-                <h3 class="section-title">Add Product</h3>
-                <form id="add-product-form">
-                    <!-- Basic Info -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="prod-name">Name *</label>
-                            <input type="text" id="prod-name" placeholder="Product name" required>
+            <div id="content-fee-details" class="tab-content">
+                <h2>Fee Details</h2>
+                <div class="card">
+                    <h3 class="section-title">Current Configuration</h3>
+                    <div id="fee-display">
+                        <div class="info-row">
+                            <span class="info-label">Delivery Fee</span>
+                            <span class="info-value" id="fee-delivery-display">—</span>
                         </div>
-                        <div class="form-group">
-                            <label for="prod-tagline">Tagline</label>
-                            <input type="text" id="prod-tagline" placeholder="Short catchy phrase" maxlength="100">
+                        <div class="info-row">
+                            <span class="info-label">Platform Fee</span>
+                            <span class="info-value" id="fee-platform-display">—</span>
                         </div>
-                    </div>
-                    
-                    <!-- Pricing -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="prod-selling-price">Selling Price *</label>
-                            <input type="number" id="prod-selling-price" placeholder="999.00" step="0.01" min="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-original-price">Original Price *</label>
-                            <input type="number" id="prod-original-price" placeholder="1499.00" step="0.01" min="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-discount">Discount %</label>
-                            <input type="number" id="prod-discount" placeholder="0" min="0" max="100" readonly>
+                        <div class="info-row">
+                            <span class="info-label">Last Updated By</span>
+                            <span class="info-value" id="fee-updated-by-display">—</span>
                         </div>
                     </div>
-                    
-                    <!-- Categories -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="prod-fashion-style">Style *</label>
-                            <select id="prod-fashion-style" required><option value="">Select</option></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-brand">Brand *</label>
-                            <select id="prod-brand" required><option value="">Select</option></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="prod-category">Category *</label>
-                            <select id="prod-category" required><option value="">Select</option></select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="prod-occasion">Occasion *</label>
-                            <select id="prod-occasion" required><option value="">Select</option></select>
-                        </div>
-                    </div>
-
-                    <!-- Product Details Section -->
-                    <div class="details-section">
-                        <h4 class="section-subtitle">Product Details</h4>
-                        
-                        <div class="form-group">
-                            <label for="prod-desc">Description</label>
-                            <textarea id="prod-desc" rows="4" placeholder="Detailed product description"></textarea>
-                        </div>
-                        
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h3 class="section-title">Update Fees</h3>
+                    <form id="update-fees-form">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="prod-color">Color</label>
-                                <input type="text" id="prod-color" placeholder="e.g., Navy Blue" maxlength="50">
+                                <label for="fee-delivery">Delivery Fee</label>
+                                <input type="number" id="fee-delivery" step="0.01" min="0" required>
                             </div>
                             <div class="form-group">
-                                <label for="prod-material">Material</label>
-                                <input type="text" id="prod-material" placeholder="e.g., 100% Cotton" maxlength="100">
+                                <label for="fee-platform">Platform Fee</label>
+                                <input type="number" id="fee-platform" step="0.01" min="0" required>
                             </div>
                         </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="prod-length">Length</label>
-                                <input type="text" id="prod-length" placeholder="e.g., Regular" maxlength="50">
-                            </div>
-                            <div class="form-group">
-                                <label for="prod-sleeve">Sleeve</label>
-                                <input type="text" id="prod-sleeve" placeholder="e.g., Short Sleeve" maxlength="50">
-                            </div>
-                            <div class="form-group">
-                                <label for="prod-transparency">Transparency</label>
-                                <input type="text" id="prod-transparency" placeholder="e.g., Opaque" maxlength="50">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="prod-care">Care Instructions</label>
-                            <textarea id="prod-care" rows="3" placeholder="e.g., Machine wash cold, tumble dry low"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Stock Section -->
-                    <div class="details-section">
-                        <h4 class="section-subtitle">Stock by Size *</h4>
-                        <div class="stock-grid" id="stock-grid"></div>
-                    </div>
-
-                    <!-- Images Section -->
-                    <div class="details-section">
-                        <h4 class="section-subtitle">Product Images *</h4>
-                        <div class="form-group">
-                            <label for="prod-images">Upload Images (First image will be thumbnail)</label>
-                            <input type="file" id="prod-images" accept="image/jpeg,image/png,image/webp" multiple>
-                            <small>Select multiple images at once</small>
-                        </div>
-                        <div class="image-preview-container" id="image-preview-container"></div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Add Product</button>
-                    <div id="product-msg" class="msg"></div>
-                </form>
+                        <button type="submit" class="btn btn-primary">Update Fees</button>
+                        <div id="fee-msg" class="msg"></div>
+                    </form>
+                </div>
             </div>
-        </div>
+
+            <div id="content-user-lookup" class="tab-content">
+                <h2>User Lookup</h2>
+                <div class="card">
+                    <form id="user-lookup-form">
+                        <div class="lookup-row">
+                            <div class="form-group">
+                                <label for="user-lookup-id">User ID</label>
+                                <input type="text" id="user-lookup-id" placeholder="Enter user ID" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Look Up</button>
+                        </div>
+                        <div id="user-msg" class="msg"></div>
+                    </form>
+                </div>
+                <div id="user-result" class="card" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <div id="content-order-management" class="tab-content">
+                <h2>Order Management</h2>
+                <div class="card">
+                    <h3 class="section-title">Update Order Status</h3>
+                    <p style="color:#666; margin-bottom:16px; font-size:14px;">Update the status of any order by entering its Order ID and selecting a new status.</p>
+                    <form id="update-order-form">
+                        <div class="order-status-form">
+                            <div class="form-group">
+                                <label for="order-id-input">Order ID</label>
+                                <input type="number" id="order-id-input" placeholder="e.g. 1001" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="order-new-status">New Status</label>
+                                <select id="order-new-status" required>
+                                    <option value="">Select status</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="update-order-btn">Update Status</button>
+                            <button type="button" class="btn btn-secondary" id="view-order-btn">View Details</button>
+                        </div>
+                        <div id="order-msg" class="msg"></div>
+                    </form>
+                    <div class="order-result" id="order-result">
+                        <div class="order-result-row">
+                            <strong>Order ID:</strong>
+                            <span id="result-order-id"></span>
+                        </div>
+                        <div class="order-result-row" style="margin-top:8px;">
+                            <strong>New Status:</strong>
+                            <span id="result-order-status" class="status-badge"></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="order-details" class="card" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <div id="content-products" class="tab-content">
+                <h2>Products</h2>
+                <div class="product-tabs-nav">
+                    <button class="product-tab" data-product-tab="create-product">Create Product</button>
+                    <button class="product-tab" data-product-tab="edit-product">View / Edit</button>
+                    <button class="product-tab" data-product-tab="product-stock">Stock</button>
+                    <button class="product-tab" data-product-tab="out-of-stock">Out of Stock</button>
+                </div>
+
+                <div id="product-create-product" class="product-content">
+                    <div class="card">
+                        <h3 class="section-title">Add Product</h3>
+                        <form id="add-product-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prod-name">Name *</label>
+                                    <input type="text" id="prod-name" placeholder="Product name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-tagline">Tagline</label>
+                                    <input type="text" id="prod-tagline" placeholder="Short catchy phrase" maxlength="100">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prod-selling-price">Selling Price *</label>
+                                    <input type="number" id="prod-selling-price" placeholder="999.00" step="0.01" min="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-original-price">Original Price *</label>
+                                    <input type="number" id="prod-original-price" placeholder="1499.00" step="0.01" min="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-discount">Discount %</label>
+                                    <input type="number" id="prod-discount" placeholder="0" min="0" max="100" readonly>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prod-fashion-style">Style *</label>
+                                    <select id="prod-fashion-style" required><option value="">Select</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-brand">Brand *</label>
+                                    <select id="prod-brand" required><option value="">Select</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-category">Category *</label>
+                                    <select id="prod-category" required><option value="">Select</option></select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prod-occasion">Occasion *</label>
+                                    <select id="prod-occasion" required><option value="">Select</option></select>
+                                </div>
+                            </div>
+                            <div class="details-section">
+                                <h4 class="section-subtitle">Product Details</h4>
+                                <div class="form-group">
+                                    <label for="prod-desc">Description</label>
+                                    <textarea id="prod-desc" rows="4" placeholder="Detailed product description"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-color">Color</label>
+                                        <input type="text" id="prod-color" placeholder="e.g., Navy Blue" maxlength="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-material">Material</label>
+                                        <input type="text" id="prod-material" placeholder="e.g., 100% Cotton" maxlength="100">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-length">Length</label>
+                                        <input type="text" id="prod-length" placeholder="e.g., Regular" maxlength="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-sleeve">Sleeve</label>
+                                        <input type="text" id="prod-sleeve" placeholder="e.g., Short Sleeve" maxlength="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-transparency">Transparency</label>
+                                        <input type="text" id="prod-transparency" placeholder="e.g., Opaque" maxlength="50">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-care">Care Instructions</label>
+                                    <textarea id="prod-care" rows="3" placeholder="e.g., Machine wash cold, tumble dry low"></textarea>
+                                </div>
+                            </div>
+                            <div class="details-section">
+                                <h4 class="section-subtitle">Stock by Size *</h4>
+                                <div class="stock-grid" id="stock-grid"></div>
+                            </div>
+                            <div class="details-section">
+                                <h4 class="section-subtitle">Product Images *</h4>
+                                <div class="form-group">
+                                    <label for="prod-images">Upload Images (First image will be thumbnail)</label>
+                                    <input type="file" id="prod-images" accept="image/jpeg,image/png,image/webp" multiple>
+                                    <small>Select multiple images at once</small>
+                                </div>
+                                <div class="image-preview-container" id="image-preview-container"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                            <div id="product-msg" class="msg"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="product-edit-product" class="product-content">
+                    <div class="card">
+                        <h3 class="section-title">View / Edit Product</h3>
+                        <form id="edit-lookup-form">
+                            <div class="lookup-row">
+                                <div class="form-group">
+                                    <label for="edit-product-id">Product ID</label>
+                                    <input type="text" id="edit-product-id" placeholder="Enter product ID" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Look Up</button>
+                            </div>
+                            <div id="edit-product-msg" class="msg"></div>
+                        </form>
+                    </div>
+                    <div id="edit-form-container" style="display:none; margin-top:20px;">
+                        <div class="card">
+                            <h3 class="section-title">Edit Product</h3>
+                            <form id="edit-product-save-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-name">Name</label>
+                                        <input type="text" id="edit-name" placeholder="Product name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-tagline">Tagline</label>
+                                        <input type="text" id="edit-tagline" placeholder="Short catchy phrase" maxlength="100">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-selling-price">Selling Price</label>
+                                        <input type="number" id="edit-selling-price" step="0.01" min="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-original-price">Original Price</label>
+                                        <input type="number" id="edit-original-price" step="0.01" min="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-discount">Discount %</label>
+                                        <input type="number" id="edit-discount" min="0" max="100" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-brand">Brand</label>
+                                        <select id="edit-brand"><option value="">Select</option></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-fashion-style">Style</label>
+                                        <select id="edit-fashion-style"><option value="">Select</option></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-category">Category</label>
+                                        <select id="edit-category"><option value="">Select</option></select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-occasion">Occasion</label>
+                                        <select id="edit-occasion"><option value="">Select</option></select>
+                                    </div>
+                                </div>
+                                <div class="details-section">
+                                    <h4 class="section-subtitle">Product Details</h4>
+                                    <div class="form-group">
+                                        <label for="edit-desc">Description</label>
+                                        <textarea id="edit-desc" rows="4"></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="edit-color">Color</label>
+                                            <input type="text" id="edit-color" maxlength="50">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="edit-material">Material</label>
+                                            <input type="text" id="edit-material" maxlength="100">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="edit-length">Length</label>
+                                            <input type="text" id="edit-length" maxlength="50">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="edit-sleeve">Sleeve</label>
+                                            <input type="text" id="edit-sleeve" maxlength="50">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="edit-transparency">Transparency</label>
+                                            <input type="text" id="edit-transparency" maxlength="50">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-care">Care Instructions</label>
+                                        <textarea id="edit-care" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="details-section">
+                                    <h4 class="section-subtitle">Current Images</h4>
+                                    <div class="image-preview-container" id="edit-images-grid"></div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <div id="edit-save-msg" class="msg"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="product-product-stock" class="product-content">
+                    <div class="card">
+                        <h3 class="section-title">Product Stock</h3>
+                        <form id="stock-lookup-form">
+                            <div class="lookup-row">
+                                <div class="form-group">
+                                    <label for="stock-product-id">Product ID</label>
+                                    <input type="text" id="stock-product-id" placeholder="Enter product ID" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Look Up</button>
+                            </div>
+                            <div id="stock-msg" class="msg"></div>
+                        </form>
+                    </div>
+                    <div id="stock-display" style="display:none; margin-top:20px;">
+                        <div class="card">
+                            <h3 class="section-title" id="stock-product-name"></h3>
+                            <h4 class="section-subtitle">Current Stock</h4>
+                            <div class="stock-grid" id="stock-current-grid"></div>
+                            <div class="details-section">
+                                <h4 class="section-subtitle">Add Stock</h4>
+                                <div class="stock-grid" id="stock-add-grid"></div>
+                                <button type="button" class="btn btn-primary" id="add-stock-btn" style="margin-top:16px;">Add Stock</button>
+                                <div id="stock-add-msg" class="msg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="product-out-of-stock" class="product-content">
+                    <div class="card">
+                        <h3 class="section-title">Out of Stock Products</h3>
+                        <div id="oos-list"><p style="color:#666;">Select this tab to load data.</p></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
     <script src="../js/app.js"></script>
     <script>
         (function() {
+            const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
             const user = getUser();
-            if (!isLoggedIn() || !user || (user.role !== "admin" && user.role !== "owner")) {
+            if (!isLoggedIn() || !user || !adminRoles.includes(user.role)) {
                 window.location.href = "admin-login.html";
                 return;
             }
 
-            document.getElementById("role-info").textContent =
-                "Logged in as " + user.name + " · " + user.role;
+            document.getElementById("role-info").textContent = user.name + " · " + user.role;
 
-            if (user.role === "owner") {
-                document.getElementById("create-admin-section").style.display = "block";
-            }
+            const TAB_ROLES = {
+                'create-admin': ['owner', 'super_admin'],
+                'fee-details': ['owner', 'super_admin'],
+                'user-lookup': ['owner', 'super_admin', 'admin'],
+                'order-management': ['owner', 'super_admin', 'admin', 'order_admin'],
+                'products': ['owner', 'super_admin', 'admin', 'product_admin']
+            };
 
-            document.getElementById("add-product-section").style.display = "block";
-            document.getElementById("order-management-section").style.display = "block";
-            loadMeta();
-        })();
-
-        let selectedImages = [];
-        let allSizes = [];
-
-        async function loadMeta() {
-            try {
-                const meta = await apiCall("/products/meta");
-                populateSelect("prod-brand", meta.brands);
-                populateSelect("prod-category", meta.categories);
-                populateSelect("prod-fashion-style", meta.fashion_styles);
-                populateSelect("prod-occasion", meta.occasions);
-                
-                // Store sizes for stock grid
-                allSizes = meta.sizes;
-                renderStockGrid();
-            } catch (err) {
-                showMsg("product-msg", "Failed to load dropdown data", "error");
-            }
-        }
-
-        function renderStockGrid() {
-            const grid = document.getElementById("stock-grid");
-            grid.innerHTML = '';
-            allSizes.forEach(size => {
-                const item = document.createElement("div");
-                item.className = "stock-item";
-                item.innerHTML = `
-                    <label for="stock-${size.name}">${size.display_name}</label>
-                    <input type="number" id="stock-${size.name}" data-size-name="${size.name}" min="0" value="0" placeholder="Qty">
-                `;
-                grid.appendChild(item);
-            });
-        }
-
-        function calculateDiscount() {
-            const sellingPrice = parseFloat(document.getElementById("prod-selling-price").value);
-            const originalPrice = parseFloat(document.getElementById("prod-original-price").value);
-            const discountField = document.getElementById("prod-discount");
-
-            if (sellingPrice && originalPrice && originalPrice > 0) {
-                const discount = Math.round(((originalPrice - sellingPrice) / originalPrice) * 100);
-                discountField.value = Math.max(0, Math.min(100, discount));
-            } else {
-                discountField.value = 0;
-            }
-        }
-
-        function validatePrices() {
-            const sellingPrice = parseFloat(document.getElementById("prod-selling-price").value);
-            const originalPrice = parseFloat(document.getElementById("prod-original-price").value);
-            
-            if (sellingPrice && originalPrice) {
-                if (sellingPrice > originalPrice) {
-                    showMsg("product-msg", "Selling price cannot be higher than original price", "error");
-                    return false;
+            let firstVisibleTab = null;
+            document.querySelectorAll('.sidebar-tab').forEach(function(tab) {
+                const tabId = tab.dataset.tab;
+                if (TAB_ROLES[tabId] && TAB_ROLES[tabId].includes(user.role)) {
+                    tab.style.display = 'block';
+                    if (!firstVisibleTab) firstVisibleTab = tabId;
                 }
-            }
-            return true;
-        }
-
-        document.getElementById("prod-selling-price").addEventListener("input", () => {
-            calculateDiscount();
-            clearMsg("product-msg");
-        });
-        document.getElementById("prod-original-price").addEventListener("input", () => {
-            calculateDiscount();
-            clearMsg("product-msg");
-        });
-
-        // Handle multiple image selection
-        document.getElementById("prod-images").addEventListener("change", function(e) {
-            const files = Array.from(e.target.files);
-            selectedImages = [...selectedImages, ...files];
-            renderImagePreviews();
-        });
-
-        function renderImagePreviews() {
-            const container = document.getElementById("image-preview-container");
-            container.innerHTML = '';
-            
-            selectedImages.forEach((file, index) => {
-                const preview = document.createElement("div");
-                preview.className = "image-preview";
-                
-                const img = document.createElement("img");
-                img.src = URL.createObjectURL(file);
-                
-                const removeBtn = document.createElement("button");
-                removeBtn.className = "remove-btn";
-                removeBtn.innerHTML = "×";
-                removeBtn.type = "button";
-                removeBtn.onclick = () => {
-                    selectedImages.splice(index, 1);
-                    renderImagePreviews();
-                };
-                
-                preview.appendChild(img);
-                preview.appendChild(removeBtn);
-                container.appendChild(preview);
             });
-        }
 
-        document.getElementById("create-admin-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            clearMsg("msg");
-            document.getElementById("credentials").style.display = "none";
+            let activeProductSubTab = null;
+            let cachedMeta = null;
+            let allSizes = [];
+            let selectedImages = [];
+            let editProductOriginal = null;
+            let stockLookupProductId = null;
 
-            try {
-                const data = await apiCall("/admin/create", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        name: document.getElementById("admin-name").value,
-                        email: document.getElementById("admin-email").value
-                    })
+            function switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+                document.querySelectorAll('.sidebar-tab').forEach(function(el) { el.classList.remove('active'); });
+                var content = document.getElementById('content-' + tabId);
+                var tab = document.querySelector('.sidebar-tab[data-tab="' + tabId + '"]');
+                if (content) content.classList.add('active');
+                if (tab) tab.classList.add('active');
+                if (tabId === 'fee-details') loadFees();
+                if (tabId === 'products' && !activeProductSubTab) switchProductSubTab('create-product');
+            }
+
+            function switchProductSubTab(subTabId) {
+                document.querySelectorAll('.product-content').forEach(function(el) { el.classList.remove('active'); });
+                document.querySelectorAll('.product-tab').forEach(function(el) { el.classList.remove('active'); });
+                var content = document.getElementById('product-' + subTabId);
+                var tab = document.querySelector('.product-tab[data-product-tab="' + subTabId + '"]');
+                if (content) content.classList.add('active');
+                if (tab) tab.classList.add('active');
+                activeProductSubTab = subTabId;
+                if (subTabId === 'out-of-stock') loadOutOfStock();
+            }
+
+            document.querySelectorAll('.sidebar-tab').forEach(function(tab) {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchTab(tab.dataset.tab);
                 });
-                document.getElementById("cred-name").textContent = data.name;
-                document.getElementById("cred-email").textContent = data.email;
-                document.getElementById("cred-password").textContent = data.generated_password;
-                document.getElementById("credentials").style.display = "block";
-                document.getElementById("create-admin-form").reset();
-            } catch (err) {
-                showMsg("msg", err.message, "error");
-            }
-        });
-
-        document.getElementById("add-product-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            clearMsg("product-msg");
-
-            // Validate prices
-            if (!validatePrices()) {
-                return;
-            }
-
-            // Validate at least one image
-            if (selectedImages.length === 0) {
-                showMsg("product-msg", "At least one image is required", "error");
-                return;
-            }
-
-            // Collect stock data
-            const stock = {};
-            let hasStock = false;
-            allSizes.forEach(size => {
-                const qty = parseInt(document.getElementById(`stock-${size.name}`).value) || 0;
-                if (qty > 0) {
-                    stock[size.name] = qty;
-                    hasStock = true;
-                }
             });
 
-            if (!hasStock) {
-                showMsg("product-msg", "At least one size must have stock quantity", "error");
-                return;
+            document.querySelectorAll('.product-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    switchProductSubTab(tab.dataset.productTab);
+                });
+            });
+
+            function getStatusBadgeClass(status) {
+                var s = (status || "").toLowerCase();
+                if (s === "delivered") return "status-badge--delivered";
+                if (s === "shipped") return "status-badge--shipped";
+                if (s === "initiated" || s === "confirmed") return "status-badge--initiated";
+                if (s === "payment_failed" || s === "cancelled") return "status-badge--payment_failed";
+                if (s === "payment_pending") return "status-badge--payment_pending";
+                return "";
             }
 
-            try {
-                // Step 1: Upload all images first
-                showMsg("product-msg", "Uploading images...", "info");
-                const imageUrls = [];
-                for (const imageFile of selectedImages) {
-                    const formData = new FormData();
-                    formData.append("file", imageFile);
-                    
-                    const token = getToken();
-                    const res = await fetch(API + "/uploads", {
+            function calcDiscount(sellingId, originalId, discountId) {
+                var sp = parseFloat(document.getElementById(sellingId).value);
+                var op = parseFloat(document.getElementById(originalId).value);
+                var df = document.getElementById(discountId);
+                if (sp && op && op > 0) {
+                    df.value = Math.max(0, Math.min(100, Math.round(((op - sp) / op) * 100)));
+                } else {
+                    df.value = 0;
+                }
+            }
+
+            async function loadMeta() {
+                try {
+                    cachedMeta = await apiCall("/products/meta");
+                    allSizes = cachedMeta.sizes || [];
+                    populateSelect("prod-brand", cachedMeta.brands);
+                    populateSelect("prod-category", cachedMeta.categories);
+                    populateSelect("prod-fashion-style", cachedMeta.fashion_styles);
+                    populateSelect("prod-occasion", cachedMeta.occasions);
+                    populateSelect("edit-brand", cachedMeta.brands);
+                    populateSelect("edit-category", cachedMeta.categories);
+                    populateSelect("edit-fashion-style", cachedMeta.fashion_styles);
+                    populateSelect("edit-occasion", cachedMeta.occasions);
+                    renderCreateStockGrid();
+                } catch (err) {
+                    showMsg("product-msg", "Failed to load dropdown data", "error");
+                }
+            }
+
+            function renderCreateStockGrid() {
+                var grid = document.getElementById("stock-grid");
+                if (!grid) return;
+                grid.innerHTML = '';
+                allSizes.forEach(function(size) {
+                    var item = document.createElement("div");
+                    item.className = "stock-item";
+                    var label = document.createElement("label");
+                    label.setAttribute("for", "stock-" + size.name);
+                    label.textContent = size.display_name;
+                    var input = document.createElement("input");
+                    input.type = "number";
+                    input.id = "stock-" + size.name;
+                    input.dataset.sizeName = size.name;
+                    input.min = "0";
+                    input.value = "0";
+                    input.placeholder = "Qty";
+                    item.appendChild(label);
+                    item.appendChild(input);
+                    grid.appendChild(item);
+                });
+            }
+
+            function setupAdminRoleDropdown() {
+                var ownerRoles = [
+                    { name: "super_admin", display_name: "Super Admin" },
+                    { name: "admin", display_name: "Admin" },
+                    { name: "order_admin", display_name: "Order Admin" },
+                    { name: "product_admin", display_name: "Product Admin" }
+                ];
+                var superAdminRoles = [
+                    { name: "admin", display_name: "Admin" },
+                    { name: "order_admin", display_name: "Order Admin" },
+                    { name: "product_admin", display_name: "Product Admin" }
+                ];
+                var roles = user.role === 'owner' ? ownerRoles : superAdminRoles;
+                populateSelect("admin-role", roles);
+            }
+
+            if (['owner', 'super_admin'].includes(user.role)) {
+                setupAdminRoleDropdown();
+            }
+
+            document.getElementById("create-admin-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("create-admin-msg");
+                document.getElementById("credentials").style.display = "none";
+                try {
+                    var data = await apiCall("/admin/create", {
                         method: "POST",
-                        headers: { "Authorization": "Bearer " + token },
-                        body: formData
+                        body: JSON.stringify({
+                            name: document.getElementById("admin-name").value,
+                            email: document.getElementById("admin-email").value,
+                            role: document.getElementById("admin-role").value
+                        })
                     });
-                    
-                    if (!res.ok) throw new Error("Image upload failed");
-                    
-                    const data = await res.json();
-                    imageUrls.push(data.file_path || data.url);
+                    document.getElementById("cred-name").textContent = data.name;
+                    document.getElementById("cred-email").textContent = data.email;
+                    document.getElementById("cred-role").textContent = data.role_formatted || data.role;
+                    document.getElementById("cred-password").textContent = data.generated_password;
+                    document.getElementById("credentials").style.display = "block";
+                    document.getElementById("create-admin-form").reset();
+                } catch (err) {
+                    showMsg("create-admin-msg", err.message, "error");
+                }
+            });
+
+            async function loadFees() {
+                try {
+                    var data = await apiCall("/admin/fees");
+                    document.getElementById("fee-delivery-display").textContent = data.delivery_fee_formatted || data.delivery_fee;
+                    document.getElementById("fee-platform-display").textContent = data.platform_fee_formatted || data.platform_fee;
+                    document.getElementById("fee-updated-by-display").textContent = data.updated_by || "—";
+                    document.getElementById("fee-delivery").value = data.delivery_fee;
+                    document.getElementById("fee-platform").value = data.platform_fee;
+                } catch (err) {
+                    showMsg("fee-msg", err.message, "error");
+                }
+            }
+
+            document.getElementById("update-fees-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("fee-msg");
+                try {
+                    await apiCall("/admin/fees", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            delivery_fee: parseFloat(document.getElementById("fee-delivery").value),
+                            platform_fee: parseFloat(document.getElementById("fee-platform").value)
+                        })
+                    });
+                    showMsg("fee-msg", "Fees updated successfully!", "success");
+                    loadFees();
+                } catch (err) {
+                    showMsg("fee-msg", err.message, "error");
+                }
+            });
+
+            document.getElementById("user-lookup-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("user-msg");
+                document.getElementById("user-result").style.display = "none";
+                var userId = document.getElementById("user-lookup-id").value.trim();
+                if (!userId) return;
+                try {
+                    var data = await apiCall("/admin/users/" + userId);
+                    var resultDiv = document.getElementById("user-result");
+                    var html = '<h3 class="section-title">User Details</h3>';
+                    var fields = [
+                        ["User ID", data.user_id],
+                        ["Name", data.name],
+                        ["Email", data.email],
+                        ["Role", data.role_formatted || data.role],
+                        ["Phone", data.phone_number],
+                        ["Gender", data.gender_formatted],
+                        ["Date of Birth", data.date_of_birth]
+                    ];
+                    fields.forEach(function(pair) {
+                        html += '<div class="info-row"><span class="info-label">' + pair[0] + '</span><span class="info-value">' + (pair[1] || '—') + '</span></div>';
+                    });
+                    resultDiv.innerHTML = html;
+                    resultDiv.style.display = "block";
+                } catch (err) {
+                    showMsg("user-msg", err.message || "User not found", "error");
+                }
+            });
+
+            document.getElementById("update-order-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("order-msg");
+                document.getElementById("order-result").classList.remove("visible");
+                var orderId = document.getElementById("order-id-input").value.trim();
+                var newStatus = document.getElementById("order-new-status").value;
+                if (!orderId || !newStatus) {
+                    showMsg("order-msg", "Please enter an Order ID and select a status", "error");
+                    return;
+                }
+                var btn = document.getElementById("update-order-btn");
+                btn.disabled = true;
+                btn.textContent = "Updating...";
+                try {
+                    var data = await apiCall("/admin/orders/" + orderId + "/status", {
+                        method: "PATCH",
+                        body: JSON.stringify({ order_status: newStatus })
+                    });
+                    showMsg("order-msg", "Order status updated successfully!", "success");
+                    document.getElementById("result-order-id").textContent = data.order_id;
+                    var statusBadge = document.getElementById("result-order-status");
+                    statusBadge.textContent = data.order_status_formatted;
+                    statusBadge.className = "status-badge " + getStatusBadgeClass(data.order_status);
+                    document.getElementById("order-result").classList.add("visible");
+                    document.getElementById("order-new-status").value = "";
+                } catch (err) {
+                    showMsg("order-msg", err.message, "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Update Status";
+                }
+            });
+
+            document.getElementById("view-order-btn").addEventListener("click", async function() {
+                clearMsg("order-msg");
+                var orderId = document.getElementById("order-id-input").value.trim();
+                if (!orderId) {
+                    showMsg("order-msg", "Please enter an Order ID", "error");
+                    return;
+                }
+                var btn = document.getElementById("view-order-btn");
+                btn.disabled = true;
+                btn.textContent = "Loading...";
+                try {
+                    var data = await apiCall("/admin/orders/" + orderId);
+                    renderOrderDetails(data);
+                } catch (err) {
+                    showMsg("order-msg", err.message, "error");
+                    document.getElementById("order-details").style.display = "none";
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "View Details";
+                }
+            });
+
+            function renderOrderDetails(data) {
+                var container = document.getElementById("order-details");
+                var html = '<h3 class="section-title">Order #' + data.order_id + '</h3>';
+
+                html += '<div class="info-row"><span class="info-label">User ID</span><span class="info-value">' + data.user_id + '</span></div>';
+                html += '<div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="status-badge ' + getStatusBadgeClass(data.order_status) + '">' + (data.order_status_formatted || data.order_status) + '</span></span></div>';
+                html += '<div class="info-row"><span class="info-label">Payment Mode</span><span class="info-value">' + (data.payment_mode_formatted || data.payment_mode || '—') + '</span></div>';
+                html += '<div class="info-row"><span class="info-label">Payment Status</span><span class="info-value">' + (data.payment_status_formatted || data.payment_status || '—') + '</span></div>';
+
+                // Backend returns `products` (not `items`), each with `product_name` (not `name`)
+                var products = data.products || [];
+                if (products.length > 0) {
+                    html += '<div class="details-section"><h4 class="section-subtitle">Products</h4>';
+                    html += '<table class="order-detail-table"><thead><tr>';
+                    html += '<th>Product</th><th>Size</th><th>Qty</th><th>Price</th><th>Original</th>';
+                    html += '</tr></thead><tbody>';
+                    products.forEach(function(item) {
+                        html += '<tr>';
+                        html += '<td>' + (item.product_name || '—') + '</td>';
+                        html += '<td>' + (item.size_formatted || item.size || '—') + '</td>';
+                        html += '<td>' + (item.quantity || 0) + '</td>';
+                        html += '<td>' + (item.selling_price_formatted || item.selling_price || '—') + '</td>';
+                        html += '<td style="text-decoration:line-through; color:#999;">' + (item.original_price_formatted || item.original_price || '—') + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
                 }
 
-                // Step 2: Create product with details
-                showMsg("product-msg", "Creating product...", "info");
-                
-                const productData = {
-                    name: document.getElementById("prod-name").value,
-                    tagline: document.getElementById("prod-tagline").value || null,
-                    selling_price: parseFloat(document.getElementById("prod-selling-price").value),
-                    original_price: parseFloat(document.getElementById("prod-original-price").value),
-                    discount_percentage: parseInt(document.getElementById("prod-discount").value) || 0,
-                    brand: document.getElementById("prod-brand").value,
-                    fashion_style: document.getElementById("prod-fashion-style").value,
-                    category: document.getElementById("prod-category").value,
-                    occasion: document.getElementById("prod-occasion").value,
-                    product_details: {
-                        description: document.getElementById("prod-desc").value || null,
-                        color: document.getElementById("prod-color").value || null,
-                        material: document.getElementById("prod-material").value || null,
-                        length: document.getElementById("prod-length").value || null,
-                        sleeve: document.getElementById("prod-sleeve").value || null,
-                        transparency: document.getElementById("prod-transparency").value || null,
-                        care_instructions: document.getElementById("prod-care").value || null
-                    },
-                    stock: stock,
-                    images: imageUrls
-                };
+                if (data.address) {
+                    var addr = data.address;
+                    html += '<div class="details-section"><h4 class="section-subtitle">Delivery Address</h4>';
+                    html += '<div style="font-size:14px; line-height:1.8;">';
+                    // Backend uses: name, contact_number, first_line, second_line, landmark, city, state, pincode
+                    if (addr.name) html += '<strong>' + addr.name + '</strong><br>';
+                    if (addr.contact_number) html += addr.contact_number + '<br>';
+                    if (addr.first_line) html += addr.first_line + '<br>';
+                    if (addr.second_line) html += addr.second_line + '<br>';
+                    if (addr.landmark) html += addr.landmark + '<br>';
+                    var cityLine = [addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
+                    if (cityLine) html += cityLine;
+                    html += '</div></div>';
+                }
 
-                const token = getToken();
-                const res = await fetch(API + "/products", {
-                    method: "POST",
-                    headers: { 
-                        "Authorization": "Bearer " + token,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(productData)
+                // Backend uses: order_amount (cart total), order_savings, convenience_fee (object), order_total
+                html += '<div class="details-section"><h4 class="section-subtitle">Order Summary</h4>';
+                var fee = data.convenience_fee || {};
+                var feeStr = '';
+                if (fee.delivery_fee_formatted || fee.platform_fee_formatted) {
+                    var parts = [];
+                    if (fee.delivery_fee_formatted) parts.push('Delivery: ' + fee.delivery_fee_formatted);
+                    if (fee.platform_fee_formatted) parts.push('Platform: ' + fee.platform_fee_formatted);
+                    feeStr = parts.join(' + ');
+                }
+                var totals = [
+                    ["Cart Total", data.order_amount_formatted || data.order_amount],
+                    ["Savings", data.order_savings_formatted || data.order_savings],
+                    ["Convenience Fee", feeStr || null],
+                    ["Order Total", data.order_total_formatted || data.order_total]
+                ];
+                totals.forEach(function(pair) {
+                    if (pair[1] !== undefined && pair[1] !== null && pair[1] !== '') {
+                        var style = pair[0] === "Order Total" ? ' style="font-weight:700; font-size:16px;"' : '';
+                        html += '<div class="info-row"><span class="info-label">' + pair[0] + '</span><span class="info-value"' + style + '>' + pair[1] + '</span></div>';
+                    }
                 });
-                
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({ message: "Request failed" }));
-                    throw new Error(err.message || "Error " + res.status);
+                html += '</div>';
+
+                if (data.payment_intent_id) {
+                    html += '<div class="details-section"><h4 class="section-subtitle">Payment Info</h4>';
+                    var payFields = [
+                        ["Payment Intent ID", data.payment_intent_id],
+                        ["Payment Method", data.payment_method_formatted || data.payment_method],
+                        ["Amount Paid", data.amount_paid_formatted || data.amount_paid],
+                        ["Reference ID", data.reference_id]
+                    ];
+                    payFields.forEach(function(pair) {
+                        if (pair[1]) {
+                            html += '<div class="info-row"><span class="info-label">' + pair[0] + '</span><span class="info-value">' + pair[1] + '</span></div>';
+                        }
+                    });
+                    html += '</div>';
                 }
-                
-                showMsg("product-msg", "Product added successfully!", "success");
-                document.getElementById("add-product-form").reset();
-                selectedImages = [];
+
+                container.innerHTML = html;
+                container.style.display = "block";
+            }
+
+            document.getElementById("prod-selling-price").addEventListener("input", function() {
+                calcDiscount("prod-selling-price", "prod-original-price", "prod-discount");
+                clearMsg("product-msg");
+            });
+            document.getElementById("prod-original-price").addEventListener("input", function() {
+                calcDiscount("prod-selling-price", "prod-original-price", "prod-discount");
+                clearMsg("product-msg");
+            });
+
+            document.getElementById("prod-images").addEventListener("change", function(e) {
+                selectedImages = selectedImages.concat(Array.from(e.target.files));
                 renderImagePreviews();
-                renderStockGrid();
-            } catch (err) {
-                showMsg("product-msg", err.message, "error");
-            }
-        });
+            });
 
-        /* ── Order Status Update ─────────────────────── */
-        function getStatusBadgeClass(status) {
-            const s = (status || "").toLowerCase();
-            if (s === "delivered") return "status-badge--delivered";
-            if (s === "shipped") return "status-badge--shipped";
-            if (s === "initiated" || s === "confirmed") return "status-badge--initiated";
-            if (s === "payment_failed" || s === "cancelled") return "status-badge--payment_failed";
-            if (s === "payment_pending") return "status-badge--payment_pending";
-            return "";
-        }
-
-        document.getElementById("update-order-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            clearMsg("order-msg");
-            document.getElementById("order-result").classList.remove("visible");
-
-            const orderId = document.getElementById("order-id-input").value.trim();
-            const newStatus = document.getElementById("order-new-status").value;
-
-            if (!orderId || !newStatus) {
-                showMsg("order-msg", "Please enter an Order ID and select a status", "error");
-                return;
+            function renderImagePreviews() {
+                var container = document.getElementById("image-preview-container");
+                container.innerHTML = '';
+                selectedImages.forEach(function(file, index) {
+                    var preview = document.createElement("div");
+                    preview.className = "image-preview";
+                    var img = document.createElement("img");
+                    img.src = URL.createObjectURL(file);
+                    var removeBtn = document.createElement("button");
+                    removeBtn.className = "remove-btn";
+                    removeBtn.innerHTML = "×";
+                    removeBtn.type = "button";
+                    removeBtn.onclick = function() {
+                        selectedImages.splice(index, 1);
+                        renderImagePreviews();
+                    };
+                    preview.appendChild(img);
+                    preview.appendChild(removeBtn);
+                    container.appendChild(preview);
+                });
             }
 
-            const btn = document.getElementById("update-order-btn");
-            btn.disabled = true;
-            btn.textContent = "Updating...";
+            document.getElementById("add-product-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("product-msg");
 
-            try {
-                const data = await apiCall(`/admin/orders/${orderId}/status`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ order_status: newStatus })
+                var sellingPrice = parseFloat(document.getElementById("prod-selling-price").value);
+                var originalPrice = parseFloat(document.getElementById("prod-original-price").value);
+
+                if (sellingPrice && originalPrice && sellingPrice > originalPrice) {
+                    showMsg("product-msg", "Selling price cannot be higher than original price", "error");
+                    return;
+                }
+
+                if (selectedImages.length === 0) {
+                    showMsg("product-msg", "At least one image is required", "error");
+                    return;
+                }
+
+                var stock = {};
+                var hasStock = false;
+                allSizes.forEach(function(size) {
+                    var qty = parseInt(document.getElementById("stock-" + size.name).value) || 0;
+                    if (qty > 0) {
+                        stock[size.name] = qty;
+                        hasStock = true;
+                    }
                 });
 
-                showMsg("order-msg", "Order status updated successfully!", "success");
+                if (!hasStock) {
+                    showMsg("product-msg", "At least one size must have stock quantity", "error");
+                    return;
+                }
 
-                const resultDiv = document.getElementById("order-result");
-                document.getElementById("result-order-id").textContent = data.order_id;
+                try {
+                    showMsg("product-msg", "Uploading images...", "info");
+                    var imageUrls = [];
+                    for (var i = 0; i < selectedImages.length; i++) {
+                        var formData = new FormData();
+                        formData.append("file", selectedImages[i]);
+                        var token = getToken();
+                        var res = await fetch(API + "/uploads", {
+                            method: "POST",
+                            headers: { "Authorization": "Bearer " + token },
+                            body: formData
+                        });
+                        if (!res.ok) throw new Error("Image upload failed");
+                        var imgData = await res.json();
+                        imageUrls.push(imgData.file_path || imgData.url);
+                    }
 
-                const statusBadge = document.getElementById("result-order-status");
-                statusBadge.textContent = data.order_status_formatted;
-                statusBadge.className = "status-badge " + getStatusBadgeClass(data.order_status);
+                    showMsg("product-msg", "Creating product...", "info");
 
-                resultDiv.classList.add("visible");
-                document.getElementById("order-new-status").value = "";
-            } catch (err) {
-                showMsg("order-msg", err.message, "error");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Update Status";
+                    var productData = {
+                        name: document.getElementById("prod-name").value,
+                        tagline: document.getElementById("prod-tagline").value || null,
+                        selling_price: sellingPrice,
+                        original_price: originalPrice,
+                        discount_percentage: parseInt(document.getElementById("prod-discount").value) || 0,
+                        brand: document.getElementById("prod-brand").value,
+                        fashion_style: document.getElementById("prod-fashion-style").value,
+                        category: document.getElementById("prod-category").value,
+                        occasion: document.getElementById("prod-occasion").value,
+                        product_details: {
+                            description: document.getElementById("prod-desc").value || null,
+                            color: document.getElementById("prod-color").value || null,
+                            material: document.getElementById("prod-material").value || null,
+                            length: document.getElementById("prod-length").value || null,
+                            sleeve: document.getElementById("prod-sleeve").value || null,
+                            transparency: document.getElementById("prod-transparency").value || null,
+                            care_instructions: document.getElementById("prod-care").value || null
+                        },
+                        stock: stock,
+                        images: imageUrls
+                    };
+
+                    await apiCall("/admin/products", {
+                        method: "POST",
+                        body: JSON.stringify(productData)
+                    });
+
+                    showMsg("product-msg", "Product added successfully!", "success");
+                    document.getElementById("add-product-form").reset();
+                    selectedImages = [];
+                    renderImagePreviews();
+                    renderCreateStockGrid();
+                } catch (err) {
+                    showMsg("product-msg", err.message, "error");
+                }
+            });
+
+            document.getElementById("edit-lookup-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("edit-product-msg");
+                document.getElementById("edit-form-container").style.display = "none";
+                var productId = document.getElementById("edit-product-id").value.trim();
+                if (!productId) return;
+                try {
+                    var data = await apiCall("/products/" + productId);
+                    editProductOriginal = data;
+                    populateEditForm(data);
+                    document.getElementById("edit-form-container").style.display = "block";
+                } catch (err) {
+                    showMsg("edit-product-msg", err.message, "error");
+                }
+            });
+
+            function populateEditForm(data) {
+                var details = data.details || {};
+
+                document.getElementById("edit-name").value = data.name || '';
+                document.getElementById("edit-tagline").value = data.tag_line || '';
+                document.getElementById("edit-selling-price").value = data.selling_price || '';
+                document.getElementById("edit-original-price").value = data.original_price || '';
+                document.getElementById("edit-brand").value = data.brand || '';
+                document.getElementById("edit-fashion-style").value = data.fashion_style || '';
+                document.getElementById("edit-category").value = data.category || '';
+                document.getElementById("edit-occasion").value = data.occasion || '';
+                document.getElementById("edit-desc").value = details.description || '';
+                document.getElementById("edit-color").value = details.color || '';
+                document.getElementById("edit-material").value = details.material || '';
+                document.getElementById("edit-length").value = details.length || '';
+                document.getElementById("edit-sleeve").value = details.sleeve || '';
+                document.getElementById("edit-transparency").value = details.transparency || '';
+                document.getElementById("edit-care").value = details.care_instructions || '';
+
+                calcDiscount("edit-selling-price", "edit-original-price", "edit-discount");
+
+                var imagesGrid = document.getElementById("edit-images-grid");
+                imagesGrid.innerHTML = '';
+                var images = data.images || [];
+                images.forEach(function(imgPath) {
+                    var preview = document.createElement("div");
+                    preview.className = "image-preview";
+                    var img = document.createElement("img");
+                    img.src = SERVER + imgPath;
+                    preview.appendChild(img);
+                    imagesGrid.appendChild(preview);
+                });
             }
-        });
+
+            document.getElementById("edit-selling-price").addEventListener("input", function() {
+                calcDiscount("edit-selling-price", "edit-original-price", "edit-discount");
+            });
+            document.getElementById("edit-original-price").addEventListener("input", function() {
+                calcDiscount("edit-selling-price", "edit-original-price", "edit-discount");
+            });
+
+            document.getElementById("edit-product-save-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                clearMsg("edit-save-msg");
+                var productId = document.getElementById("edit-product-id").value.trim();
+                if (!productId || !editProductOriginal) return;
+
+                var orig = editProductOriginal;
+                var origDetails = orig.details || {};
+                var patchBody = {};
+                var detailsBody = {};
+                var hasChanges = false;
+                var hasDetailChanges = false;
+
+                var fieldChecks = [
+                    ["edit-name", "name", "string"],
+                    ["edit-tagline", "tagline", "string"],
+                    ["edit-selling-price", "selling_price", "number"],
+                    ["edit-original-price", "original_price", "number"],
+                    ["edit-brand", "brand", "string"],
+                    ["edit-fashion-style", "fashion_style", "string"],
+                    ["edit-category", "category", "string"],
+                    ["edit-occasion", "occasion", "string"]
+                ];
+
+                fieldChecks.forEach(function(check) {
+                    var currentVal = document.getElementById(check[0]).value;
+                    var origVal = orig[check[1]];
+                    if (check[2] === "number") {
+                        currentVal = parseFloat(currentVal) || 0;
+                        origVal = parseFloat(origVal) || 0;
+                        if (currentVal !== origVal) {
+                            patchBody[check[1]] = currentVal;
+                            hasChanges = true;
+                        }
+                    } else {
+                        if ((currentVal || '') !== (String(origVal || ''))) {
+                            patchBody[check[1]] = currentVal || null;
+                            hasChanges = true;
+                        }
+                    }
+                });
+
+                var detailChecks = [
+                    ["edit-desc", "description"],
+                    ["edit-color", "color"],
+                    ["edit-material", "material"],
+                    ["edit-length", "length"],
+                    ["edit-sleeve", "sleeve"],
+                    ["edit-transparency", "transparency"],
+                    ["edit-care", "care_instructions"]
+                ];
+
+                detailChecks.forEach(function(check) {
+                    var currentVal = document.getElementById(check[0]).value;
+                    var origVal = origDetails[check[1]] || '';
+                    if ((currentVal || '') !== (String(origVal || ''))) {
+                        detailsBody[check[1]] = currentVal || null;
+                        hasDetailChanges = true;
+                    }
+                });
+
+                if (hasDetailChanges) {
+                    patchBody.product_details = detailsBody;
+                    hasChanges = true;
+                }
+
+                if (patchBody.selling_price !== undefined || patchBody.original_price !== undefined) {
+                    patchBody.discount_percentage = parseInt(document.getElementById("edit-discount").value) || 0;
+                }
+
+                if (!hasChanges) {
+                    showMsg("edit-save-msg", "No changes detected", "info");
+                    return;
+                }
+
+                try {
+                    await apiCall("/admin/products/" + productId, {
+                        method: "PATCH",
+                        body: JSON.stringify(patchBody)
+                    });
+                    showMsg("edit-save-msg", "Product updated successfully!", "success");
+                    var refreshed = await apiCall("/products/" + productId);
+                    editProductOriginal = refreshed;
+                    populateEditForm(refreshed);
+                } catch (err) {
+                    showMsg("edit-save-msg", err.message, "error");
+                }
+            });
+
+            document.getElementById("stock-lookup-form").addEventListener("submit", function(e) {
+                e.preventDefault();
+                lookupStock();
+            });
+
+            async function lookupStock() {
+                var productId = document.getElementById("stock-product-id").value.trim();
+                if (!productId) return;
+                clearMsg("stock-msg");
+                clearMsg("stock-add-msg");
+                document.getElementById("stock-display").style.display = "none";
+                try {
+                    var data = await apiCall("/admin/products/" + productId + "/stock");
+                    stockLookupProductId = productId;
+                    renderStockDisplay(data);
+                } catch (err) {
+                    showMsg("stock-msg", err.message, "error");
+                }
+            }
+
+            function renderStockDisplay(data) {
+                document.getElementById("stock-product-name").textContent = data.product_name || ("Product #" + stockLookupProductId);
+
+                var currentGrid = document.getElementById("stock-current-grid");
+                currentGrid.innerHTML = '';
+                var stockList = data.stock || [];
+                stockList.forEach(function(entry) {
+                    var item = document.createElement("div");
+                    item.className = "stock-item";
+                    var label = document.createElement("label");
+                    label.textContent = entry.size_formatted || entry.size;
+                    var input = document.createElement("input");
+                    input.type = "number";
+                    input.value = entry.quantity !== undefined ? entry.quantity : 0;
+                    input.readOnly = true;
+                    item.appendChild(label);
+                    item.appendChild(input);
+                    currentGrid.appendChild(item);
+                });
+
+                var addGrid = document.getElementById("stock-add-grid");
+                addGrid.innerHTML = '';
+                stockList.forEach(function(entry) {
+                    var item = document.createElement("div");
+                    item.className = "stock-item";
+                    var label = document.createElement("label");
+                    label.setAttribute("for", "add-stock-" + entry.size);
+                    label.textContent = entry.size_formatted || entry.size;
+                    var input = document.createElement("input");
+                    input.type = "number";
+                    input.id = "add-stock-" + entry.size;
+                    input.dataset.sizeName = entry.size;
+                    input.min = "0";
+                    input.value = "0";
+                    input.placeholder = "Additional Qty";
+                    item.appendChild(label);
+                    item.appendChild(input);
+                    addGrid.appendChild(item);
+                });
+
+                document.getElementById("stock-display").style.display = "block";
+            }
+
+            document.getElementById("add-stock-btn").addEventListener("click", async function() {
+                if (!stockLookupProductId) return;
+                clearMsg("stock-add-msg");
+
+                var stock = {};
+                var hasStock = false;
+                var addInputs = document.getElementById("stock-add-grid").querySelectorAll("input[data-size-name]");
+                addInputs.forEach(function(input) {
+                    var qty = parseInt(input.value) || 0;
+                    if (qty > 0) {
+                        stock[input.dataset.sizeName] = qty;
+                        hasStock = true;
+                    }
+                });
+
+                if (!hasStock) {
+                    showMsg("stock-add-msg", "Enter at least one quantity to add", "error");
+                    return;
+                }
+
+                try {
+                    await apiCall("/admin/products/" + stockLookupProductId + "/stock", {
+                        method: "PATCH",
+                        body: JSON.stringify({ stock: stock })
+                    });
+                    showMsg("stock-add-msg", "Stock added successfully!", "success");
+                    lookupStock();
+                } catch (err) {
+                    showMsg("stock-add-msg", err.message, "error");
+                }
+            });
+
+            async function loadOutOfStock() {
+                var container = document.getElementById("oos-list");
+                container.innerHTML = '<p style="color:#666;">Loading...</p>';
+                try {
+                    var resp = await apiCall("/admin/products/out-of-stock");
+                    var items = resp.products || [];
+                    if (items.length === 0) {
+                        container.innerHTML = '<div class="empty-state"><p>All products are in stock ✓</p></div>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    items.forEach(function(item) {
+                        var row = document.createElement("div");
+                        row.className = "oos-row";
+                        row.dataset.productId = item.product_id;
+
+                        var thumb = document.createElement("div");
+                        thumb.className = "oos-thumb";
+                        if (item.image) {
+                            var img = document.createElement("img");
+                            img.src = SERVER + item.image;
+                            img.alt = item.name || '';
+                            thumb.appendChild(img);
+                        }
+
+                        var info = document.createElement("div");
+                        info.className = "oos-info";
+                        var idEl = document.createElement("strong");
+                        idEl.textContent = "ID: " + item.product_id;
+                        var nameEl = document.createElement("span");
+                        nameEl.textContent = item.name || '—';
+                        info.appendChild(idEl);
+                        info.appendChild(nameEl);
+
+                        row.appendChild(thumb);
+                        row.appendChild(info);
+                        container.appendChild(row);
+
+                        row.addEventListener("click", function() {
+                            switchProductSubTab("product-stock");
+                            document.getElementById("stock-product-id").value = item.product_id;
+                            lookupStock();
+                        });
+                    });
+                } catch (err) {
+                    container.innerHTML = '<p style="color:var(--color-error);">' + err.message + '</p>';
+                }
+            }
+
+            if (TAB_ROLES['products'].includes(user.role)) {
+                loadMeta();
+            }
+
+            if (firstVisibleTab) {
+                switchTab(firstVisibleTab);
+            }
+        })();
     </script>
 </body>
 </html>

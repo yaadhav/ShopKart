@@ -1,16 +1,16 @@
 package com.shopkart.catalog.controller;
 
-import com.shopkart.catalog.dto.request.CreateProductRequest;
+import com.shopkart.catalog.dto.request.RateProductRequest;
 import com.shopkart.catalog.dto.response.ProductResponse;
 import com.shopkart.catalog.service.ProductService;
 import com.shopkart.catalog.util.ProductUtil;
 import com.shopkart.common.util.PagedResponse;
-import jakarta.validation.Valid;
+import com.shopkart.user.util.AuthUtil;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +30,7 @@ public class ProductAPI {
         this.productService = productService;
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<Map<String, Object>> getProducts(@RequestParam Map<String, String> filters) {
         Page<ProductResponse> page = productService.getProducts(filters);
         List<Map<String, Object>> items = page.getContent().stream()
@@ -40,17 +40,17 @@ public class ProductAPI {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getProductDetails(@org.springframework.web.bind.annotation.PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getProductDetails(@PathVariable Long id) {
         Map<String, Object> details = productService.getProductDetails(id);
         return ResponseEntity.ok(details);
     }
 
-    @PostMapping("")
-    @PreAuthorize("hasAnyRole('admin', 'owner')")
-    public ResponseEntity<Map<String, Object>> createProduct(
-            @RequestBody @Valid CreateProductRequest request) {
-
-        ProductResponse product = productService.createProduct(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ProductUtil.toResponse(product));
+    @PostMapping("/{productId}/rate")
+    @PreAuthorize("hasRole('user')")
+    public ResponseEntity<Map<String, Object>> rateProduct(
+            @PathVariable Long productId,
+            @RequestBody RateProductRequest request) {
+        Long userId = AuthUtil.getUserIdFromJwt();
+        return ResponseEntity.ok(productService.rateProduct(userId, productId, request));
     }
 }

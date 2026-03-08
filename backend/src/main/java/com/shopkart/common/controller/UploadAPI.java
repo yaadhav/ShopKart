@@ -24,7 +24,7 @@ public class UploadAPI {
     }
 
     @PostMapping("")
-    @PreAuthorize("hasAnyRole('admin', 'owner')")
+    @PreAuthorize("hasAnyRole('owner', 'super_admin', 'admin', 'product_admin')")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         String fileName = fileUploadService.store(file);
         String filePath = "/uploads/" + fileName;

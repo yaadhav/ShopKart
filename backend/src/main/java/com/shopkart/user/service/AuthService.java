@@ -28,7 +28,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepo.existsByEmail(request.getEmail())) {
+        if(userRepo.existsByEmail(request.getEmail())) {
             throw AuthExceptionStore.USER_ALREADY_EXISTS.exception();
         }
 
@@ -54,7 +54,7 @@ public class AuthService {
         UserEntity user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(AuthExceptionStore.INVALID_CREDENTIALS::exception);
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw AuthExceptionStore.INVALID_CREDENTIALS.exception();
         }
 

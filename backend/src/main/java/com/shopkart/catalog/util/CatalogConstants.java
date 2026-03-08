@@ -27,6 +27,7 @@ public final class CatalogConstants {
         public static final String DISCOUNT_PERCENTAGE = "discount_percentage";
         public static final String RATING = "rating";
         public static final String RATING_COUNT = "rating_count";
+        public static final String AVERAGE_RATING = "average_rating";
         public static final String BRAND = "brand";
         public static final String FASHION_STYLE = "fashion_style";
         public static final String CATEGORY = "category";
@@ -52,6 +53,9 @@ public final class CatalogConstants {
         public static final String DETAILS = "details";
         public static final String IMAGES = "images";
         public static final String STOCK = "stock";
+        public static final String PRODUCT_NAME = "product_name";
+        public static final String PRODUCTS = "products";
+        public static final String TOTAL = "total";
     }
 
     public static final class SortLabels {

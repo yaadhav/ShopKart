@@ -7,7 +7,10 @@ import com.google.common.collect.Tables;
 public enum Role {
     USER(1, "user", "User"),
     ADMIN(2, "admin", "Admin"),
-    OWNER(3, "owner", "Owner");
+    OWNER(3, "owner", "Owner"),
+    SUPER_ADMIN(4, "super_admin", "Super Admin"),
+    ORDER_ADMIN(5, "order_admin", "Order Admin"),
+    PRODUCT_ADMIN(6, "product_admin", "Product Admin");
 
     public final int code;
     public final String name;

@@ -16,4 +16,7 @@ public class CreateAdminRequest {
 
     @NotBlank @Email
     private String email;
+
+    @NotBlank
+    private String role;
 }

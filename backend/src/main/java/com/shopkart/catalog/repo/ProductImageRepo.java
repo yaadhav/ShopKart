@@ -11,5 +11,4 @@ import java.util.Optional;
 public interface ProductImageRepo extends JpaRepository<ProductImageEntity, Long> {
     List<ProductImageEntity> findByProductIdOrderByDisplayOrder(Long productId);
     Optional<ProductImageEntity> findByProductIdAndIsThumbnail(Long productId, Boolean isThumbnail);
-    void deleteByProductId(Long productId);
 }

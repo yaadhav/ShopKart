@@ -1,4 +1,4 @@
-package com.shopkart.common.config;
+package com.shopkart.user.config;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;

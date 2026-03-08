@@ -256,12 +256,14 @@
             { name: "payment_failed", display_name: "Payment Failed" },
             { name: "confirmed", display_name: "Confirmed" },
             { name: "shipped", display_name: "Shipped" },
-            { name: "delivered", display_name: "Delivered" },
-            { name: "cancelled", display_name: "Cancelled" }
+            { name: "delivered", display_name: "Delivered" }
         ];
 
         function init() {
             if (!requireAuth()) return;
+            const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+            const user = getUser();
+            if (user && adminRoles.includes(user.role)) { window.location.href = 'admin.html'; return; }
             populateFilterCheckboxes();
             loadOrders(0, true);
         }
@@ -400,7 +402,7 @@
 
             try {
                 const data = await apiCall("/orders?" + buildParams(page).toString());
-                const orders = data.content || [];
+                const orders = data.items || [];
 
                 if (orders.length === 0 && page === 0) {
                     msg.style.display = "block";
@@ -409,13 +411,6 @@
                 }
 
                 list.innerHTML += orders.map(renderOrderCard).join("");
-
-                currentPage = data.page_details.page;
-                hasNextPage = data.page_details.has_next;
-
-                if (hasNextPage) {
-                    loadMoreArea.style.display = "block";
-                }
             } catch (err) {
                 msg.style.display = "block";
                 msg.innerHTML = `<p>${err.message}</p>`;

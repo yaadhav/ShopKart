@@ -1,7 +1,7 @@
 package com.shopkart.payment.service;
 
-import com.shopkart.common.api.ExternalApiClient;
-import com.shopkart.payment.dto.response.PaymentResponse;
+import com.shopkart.common.api.ExternalAPIClient;
+import com.shopkart.payment.dto.response.ExternalAPIResponse;
 import com.shopkart.payment.util.PaymentConstants;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +12,14 @@ import java.util.Map;
 @Component
 public class PaymentGatewayClient {
 
-    private final ExternalApiClient externalApiClient;
+    private final ExternalAPIClient externalApiClient;
 
-    public PaymentGatewayClient(ExternalApiClient externalApiClient) {
+    public PaymentGatewayClient(ExternalAPIClient externalApiClient) {
         this.externalApiClient = externalApiClient;
     }
 
-    public PaymentResponse createPaymentMockSuccess(Long paymentIntentId, Long userId, BigDecimal totalAmount) {
-        return PaymentResponse.builder()
+    public ExternalAPIResponse createPaymentMockSuccess(Long paymentIntentId, Long userId, BigDecimal totalAmount) {
+        return ExternalAPIResponse.builder()
                 .code(200)
                 .status(PaymentConstants.Keys.SUCCESS)
                 .message("Payment successful for intentId: " + paymentIntentId + ", userId: " + userId + ", amount: " + totalAmount)
@@ -27,21 +27,21 @@ public class PaymentGatewayClient {
                 .build();
     }
 
-    public PaymentResponse createPayment(Long paymentIntentId, Long userId, BigDecimal totalAmount) {
+    public ExternalAPIResponse createPayment(Long paymentIntentId, Long userId, BigDecimal totalAmount) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put(PaymentConstants.Keys.PAYMENT_INTENT_ID, paymentIntentId);
         payload.put(PaymentConstants.Keys.USER_ID, userId);
         payload.put(PaymentConstants.Keys.TOTAL_AMOUNT, totalAmount);
         payload.put(PaymentConstants.Keys.SECRET_KEY, PaymentConstants.Security.OUTBOUND_SECRET);
 
-        PaymentResponse paymentResponse = externalApiClient.invokePostAPI(PaymentConstants.API.CREATE_PAYMENT_URL, payload, PaymentResponse.class);
-        handleErrorPaymentResponse(paymentResponse);
-        return paymentResponse;
+        ExternalAPIResponse externalAPIResponse = externalApiClient.invokePostAPI(PaymentConstants.API.CREATE_PAYMENT_URL, payload, ExternalAPIResponse.class);
+        handleErrorPaymentResponse(externalAPIResponse);
+        return externalAPIResponse;
     }
 
-    private void handleErrorPaymentResponse(PaymentResponse paymentResponse) {
-        if(!(paymentResponse.getCode()>=200 && paymentResponse.getCode()<300)) {
-            paymentResponse.setSuccess(false);
+    private void handleErrorPaymentResponse(ExternalAPIResponse externalAPIResponse) {
+        if(!(externalAPIResponse.getCode() >= 200 && externalAPIResponse.getCode() < 300)) {
+            externalAPIResponse.setSuccess(false);
         }
     }
 }

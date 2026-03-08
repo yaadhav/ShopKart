@@ -15,7 +15,8 @@ public enum CatalogExceptionStore implements ExceptionStore {
     INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "CATALOG_004", "Invalid category"),
     INVALID_FASHION_STYLE(HttpStatus.BAD_REQUEST, "CATALOG_005", "Invalid fashion style"),
     INVALID_OCCASION(HttpStatus.BAD_REQUEST, "CATALOG_006", "Invalid occasion"),
-    INVALID_SIZE(HttpStatus.BAD_REQUEST, "CATALOG_007", "Invalid size");
+    INVALID_SIZE(HttpStatus.BAD_REQUEST, "CATALOG_007", "Invalid size"),
+    INVALID_RATING(HttpStatus.BAD_REQUEST, "CATALOG_008", "Rating must be between 1 and 5");
 
     private final HttpStatus status;
     private final String errorCode;

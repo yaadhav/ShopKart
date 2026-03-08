@@ -1,17 +1,14 @@
-package com.shopkart.common.api;
+package com.shopkart.catalog.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiResponse<T> {
+public class RateProductRequest {
 
-    private int status;
-    private String message;
-    private T data;
+    private Integer rating;
 }

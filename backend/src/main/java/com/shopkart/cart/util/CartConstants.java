@@ -11,7 +11,8 @@ public final class CartConstants {
         public static final String FORMATTED_SUFFIX = "_formatted";
         public static final String SIZE = "size";
         public static final String QUANTITY = "quantity";
-        public static final String ITEM_TOTAL = "item_total";
+        public static final String ITEM_ORIGINAL_TOTAL = "item_original_total";
+        public static final String ITEM_SELLING_TOTAL = "item_selling_total";
         public static final String ITEM_SAVINGS = "item_savings";
         public static final String CART_PRODUCTS = "cart_products";
         public static final String ORDER_AMOUNT = "order_amount";

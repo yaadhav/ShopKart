@@ -5,7 +5,7 @@ import com.shopkart.cart.repo.CartRepo;
 import com.shopkart.cart.util.CartConstants.Keys;
 import com.shopkart.cart.util.CartExceptionStore;
 import com.shopkart.catalog.dto.enums.Size;
-import com.shopkart.catalog.internalagent.CatalogAgent;
+import com.shopkart.catalog.internalagent.ProductAgent;
 import com.shopkart.common.util.Constants;
 import com.shopkart.common.util.CurrencyUtil;
 import com.shopkart.order.internalagent.FeeDetailsAgent;
@@ -25,12 +25,12 @@ public class CartService {
     private static final BigDecimal FREE_DELIVERY_THRESHOLD = new BigDecimal("1000");
 
     private final CartRepo cartRepo;
-    private final CatalogAgent catalogAgent;
+    private final ProductAgent productAgent;
     private final FeeDetailsAgent feeDetailsAgent;
 
-    public CartService(CartRepo cartRepo, CatalogAgent catalogAgent, FeeDetailsAgent feeDetailsAgent) {
+    public CartService(CartRepo cartRepo, ProductAgent productAgent, FeeDetailsAgent feeDetailsAgent) {
         this.cartRepo = cartRepo;
-        this.catalogAgent = catalogAgent;
+        this.productAgent = productAgent;
         this.feeDetailsAgent = feeDetailsAgent;
     }
 
@@ -42,27 +42,30 @@ public class CartService {
         BigDecimal orderSavings = BigDecimal.ZERO;
         List<Map<String, Object>> cartProducts = new ArrayList<>();
 
-        for (CartEntity entity : cartEntities) {
-            Map<String, Object> productMap = catalogAgent.getProductDetails(entity.getProductId(), Size.getName(entity.getSize()));
+        for(CartEntity entity : cartEntities) {
+            Map<String, Object> productMap = productAgent.getProductDetails(entity.getProductId(), Size.getName(entity.getSize()));
 
             Integer stockLeft = (Integer) productMap.get(Keys.QUANTITY);
             int quantity = Math.min(entity.getQuantity(), stockLeft);
-            String quantityFormatted = quantity==0 ? Constants.Phrases.OUT_OF_STOCK : Constants.Phrases.STOCK_AVAILABLE;
+            String quantityFormatted = quantity == 0 ? Constants.Phrases.OUT_OF_STOCK : Constants.Phrases.STOCK_AVAILABLE;
 
             BigDecimal sellingPrice = (BigDecimal) productMap.get(Keys.SELLING_PRICE);
             BigDecimal originalPrice = (BigDecimal) productMap.get(Keys.ORIGINAL_PRICE);
-            BigDecimal itemTotal = sellingPrice.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal itemSellingTotal = sellingPrice.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal itemOriginalTotal = originalPrice.multiply(BigDecimal.valueOf(quantity));
             BigDecimal itemSavings = originalPrice.subtract(sellingPrice).multiply(BigDecimal.valueOf(quantity));
 
-            orderAmount = orderAmount.add(itemTotal);
+            orderAmount = orderAmount.add(itemSellingTotal);
             orderSavings = orderSavings.add(itemSavings);
 
             Map<String, Object> item = new LinkedHashMap<>(productMap);
             item.put(Keys.CART_ID, entity.getCartId());
             item.put(Keys.QUANTITY, quantity);
             item.put(Keys.QUANTITY + Keys.FORMATTED_SUFFIX, quantityFormatted);
-            item.put(Keys.ITEM_TOTAL, itemTotal);
-            item.put(Keys.ITEM_TOTAL + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(itemTotal));
+            item.put(Keys.ITEM_SELLING_TOTAL, itemSellingTotal);
+            item.put(Keys.ITEM_SELLING_TOTAL + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(itemSellingTotal));
+            item.put(Keys.ITEM_ORIGINAL_TOTAL, itemOriginalTotal);
+            item.put(Keys.ITEM_ORIGINAL_TOTAL + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(itemOriginalTotal));
             item.put(Keys.ITEM_SAVINGS, itemSavings);
             item.put(Keys.ITEM_SAVINGS + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(itemSavings));
             cartProducts.add(item);
@@ -72,7 +75,7 @@ public class CartService {
         BigDecimal deliveryFee = fees.getDeliveryFee();
         String deliveryFeeFormatted;
 
-        if (orderAmount.compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
+        if(orderAmount.compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
             deliveryFee = BigDecimal.ZERO;
             deliveryFeeFormatted = Constants.Phrases.FREE;
         } else {
@@ -120,11 +123,11 @@ public class CartService {
     public Map<String, Object> updateQuantity(Long userId, Long cartId, Integer quantity) {
         CartEntity entity = cartRepo.findById(cartId)
                 .orElseThrow(CartExceptionStore.PRODUCT_NOT_IN_CART::exception);
-        if (!entity.getUserId().equals(userId)) {
+        if(!entity.getUserId().equals(userId)) {
             throw CartExceptionStore.CART_ITEM_ACCESS_DENIED.exception();
         }
-        Integer stockLeft = catalogAgent.getStockQuantity(entity.getProductId(), entity.getSize());
-        if (quantity > stockLeft) {
+        Integer stockLeft = productAgent.getStockQuantity(entity.getProductId(), entity.getSize());
+        if(quantity > stockLeft) {
             throw CartExceptionStore.QUANTITY_EXCEEDS_STOCK.exception();
         }
         entity.setQuantity(quantity);
@@ -135,7 +138,7 @@ public class CartService {
     public void removeFromCart(Long userId, Long cartId) {
         CartEntity entity = cartRepo.findById(cartId)
                 .orElseThrow(CartExceptionStore.PRODUCT_NOT_IN_CART::exception);
-        if (!entity.getUserId().equals(userId)) {
+        if(!entity.getUserId().equals(userId)) {
             throw CartExceptionStore.CART_ITEM_ACCESS_DENIED.exception();
         }
         cartRepo.delete(entity);

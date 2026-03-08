@@ -290,10 +290,10 @@
         }
 
         function buildOrderPanel(order) {
-            const isFreeDel = order.delivery_fee_formatted === "Free";
+            const isFreeDel = order.convenience_fee.delivery_fee_formatted === "Free";
             const deliveryDisplay = isFreeDel
                 ? `<span style="color:#27ae60;font-weight:600;">Free</span>`
-                : order.delivery_fee_formatted;
+                : order.convenience_fee.delivery_fee_formatted;
 
             let paymentInfoHtml = "";
             if (order.payment && order.payment_mode === "online") {
@@ -329,7 +329,7 @@
                         </div>
                         <div class="order-row">
                             <span class="order-row__label">Platform Fee</span>
-                            <span class="order-row__value">${order.platform_fee_formatted}</span>
+                            <span class="order-row__value">${order.convenience_fee.platform_fee_formatted}</span>
                         </div>
                     </div>
                     <hr class="order-divider">

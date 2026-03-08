@@ -7,7 +7,12 @@ import com.google.common.collect.Tables;
 public enum Brand {
     ZENFIT(1, "zenfit", "Zenfit"),
     URBANEDGE(2, "urbanedge", "Urbanedge"),
-    ATHLEVO(3, "athlevo", "Athlevo");
+    ATHLEVO(3, "athlevo", "Athlevo"),
+    MANGO(4, "mango", "MANGO"),
+    TRENDYOL(5, "trendyol", "Trendyol"),
+    NEXT(6, "next", "NEXT"),
+    MITERA(7, "mitera", "Mitera"),
+    LYRA(8, "lyra", "Lyra");
 
     public final int code;
     public final String name;

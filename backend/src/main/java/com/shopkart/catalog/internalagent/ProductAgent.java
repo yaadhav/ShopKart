@@ -16,13 +16,13 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class CatalogAgent {
+public class ProductAgent {
 
     private final ProductRepo productRepo;
     private final ProductImageRepo productImageRepo;
     private final ProductStockRepo productStockRepo;
 
-    public CatalogAgent(ProductRepo productRepo, ProductImageRepo productImageRepo, ProductStockRepo productStockRepo) {
+    public ProductAgent(ProductRepo productRepo, ProductImageRepo productImageRepo, ProductStockRepo productStockRepo) {
         this.productRepo = productRepo;
         this.productImageRepo = productImageRepo;
         this.productStockRepo = productStockRepo;
@@ -67,5 +67,12 @@ public class CatalogAgent {
         return productStockRepo.findByProductIdAndSize(productId, sizeCode)
                 .map(ProductStockEntity::getQuantity)
                 .orElse(0);
+    }
+
+    public void deductStock(Long productId, Integer size, Integer quantity) {
+        productStockRepo.findByProductIdAndSize(productId, size).ifPresent(stock -> {
+            stock.setQuantity(Math.max(0, stock.getQuantity() - quantity));
+            productStockRepo.save(stock);
+        });
     }
 }

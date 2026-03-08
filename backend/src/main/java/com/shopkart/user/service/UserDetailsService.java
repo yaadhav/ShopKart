@@ -23,7 +23,7 @@ public class UserDetailsService {
 
     @Transactional
     public UserDetailsResponse createOrUpdateUserDetails(Long userId, UserDetailsRequest request) {
-        if (!userRepo.existsById(userId)) {
+        if(!userRepo.existsById(userId)) {
             throw AuthExceptionStore.USER_NOT_FOUND.exception();
         }
 

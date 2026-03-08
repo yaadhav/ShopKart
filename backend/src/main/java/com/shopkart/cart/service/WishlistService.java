@@ -4,7 +4,7 @@ import com.shopkart.cart.model.WishlistEntity;
 import com.shopkart.cart.repo.WishlistRepo;
 import com.shopkart.cart.util.CartConstants.Keys;
 import com.shopkart.cart.util.CartExceptionStore;
-import com.shopkart.catalog.internalagent.CatalogAgent;
+import com.shopkart.catalog.internalagent.ProductAgent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,19 +17,19 @@ import java.util.Map;
 public class WishlistService {
 
     private final WishlistRepo wishlistRepo;
-    private final CatalogAgent catalogAgent;
+    private final ProductAgent productAgent;
 
-    public WishlistService(WishlistRepo wishlistRepo, CatalogAgent catalogAgent) {
+    public WishlistService(WishlistRepo wishlistRepo, ProductAgent productAgent) {
         this.wishlistRepo = wishlistRepo;
-        this.catalogAgent = catalogAgent;
+        this.productAgent = productAgent;
     }
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getWishlist(Long userId) {
         List<WishlistEntity> entities = wishlistRepo.findByUserId(userId);
         List<Map<String, Object>> wishListMap = new ArrayList<>();
-        for (WishlistEntity entity : entities) {
-            Map<String, Object> productMap = catalogAgent.getProductDetails(entity.getProductId());
+        for(WishlistEntity entity : entities) {
+            Map<String, Object> productMap = productAgent.getProductDetails(entity.getProductId());
             Map<String, Object> item = new LinkedHashMap<>(productMap);
             item.put(Keys.WISHLIST_ID, entity.getWishlistId());
             item.put(Keys.CREATED_TIME, entity.getCreatedTime());
@@ -40,7 +40,7 @@ public class WishlistService {
 
     @Transactional
     public Map<String, Object> addToWishlist(Long userId, Long productId) {
-        if (wishlistRepo.existsByUserIdAndProductId(userId, productId)) {
+        if(wishlistRepo.existsByUserIdAndProductId(userId, productId)) {
             throw CartExceptionStore.PRODUCT_ALREADY_IN_WISHLIST.exception();
         }
         WishlistEntity saved = wishlistRepo.save(
@@ -57,7 +57,7 @@ public class WishlistService {
     public void removeFromWishlist(Long userId, Long wishlistId) {
         WishlistEntity entity = wishlistRepo.findById(wishlistId)
                 .orElseThrow(CartExceptionStore.WISHLIST_ITEM_NOT_FOUND::exception);
-        if (!entity.getUserId().equals(userId)) {
+        if(!entity.getUserId().equals(userId)) {
             throw CartExceptionStore.WISHLIST_ITEM_ACCESS_DENIED.exception();
         }
         wishlistRepo.delete(entity);

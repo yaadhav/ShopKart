@@ -29,7 +29,7 @@ public class UserDetailsEntity extends PrePersistenceEntity {
     private String phoneNumber;
 
     @Column(name = "gender")
-    private Short gender;
+    private Integer gender;
 
     @Column(name = "dateofbirth")
     private LocalDate dateOfBirth;

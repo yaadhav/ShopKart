@@ -6,10 +6,8 @@ import com.google.common.collect.Tables;
 
 public enum PaymentMethod {
     UPI(1, "upi", "UPI"),
-    CREDIT_CARD(2, "credit_card", "Credit Card"),
-    DEBIT_CARD(3, "debit_card", "Debit Card"),
-    NET_BANKING(4, "net_banking", "Net Banking"),
-    WALLET(5, "wallet", "Wallet");
+    CARD(2, "card", "Card"),
+    NET_BANKING(3, "net_banking", "Net Banking");
 
     public final int code;
     public final String name;

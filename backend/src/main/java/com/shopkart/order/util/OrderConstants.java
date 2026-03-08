@@ -33,6 +33,7 @@ public final class OrderConstants {
         public static final String ADDRESS = "address";
         public static final String ORDERS = "orders";
         public static final String PAYMENT_INTENT_ID = "payment_intent_id";
+        public static final String USER_NAME = "user_name";
         public static final String NAME = "name";
         public static final String CONTACT_NUMBER = "contact_number";
         public static final String FIRST_LINE = "first_line";
@@ -44,6 +45,8 @@ public final class OrderConstants {
         public static final String STATUS = "status";
         public static final String PAYMENT_METHOD = "payment_method";
         public static final String REFERENCE_ID = "reference_id";
+        public static final String FEE_DETAILS_ID = "fee_details_id";
+        public static final String UPDATED_BY = "updated_by";
     }
 
     public static final class Entity {

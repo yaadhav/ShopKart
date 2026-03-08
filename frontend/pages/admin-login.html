@@ -34,9 +34,11 @@
 
     <script src="../js/app.js"></script>
     <script>
+        const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+
         (function() {
             const user = getUser();
-            if (user && (user.role === "admin" || user.role === "owner")) {
+            if (user && adminRoles.includes(user.role)) {
                 window.location.href = "admin.html";
             }
         })();
@@ -52,8 +54,8 @@
                         password: document.getElementById("password").value
                     })
                 });
-                if (data.role !== "admin" && data.role !== "owner") {
-                    showMsg("msg", "Access denied. Admin or Owner role required.", "error");
+                if (!adminRoles.includes(data.role)) {
+                    showMsg("msg", "Access denied. Admin role required.", "error");
                     return;
                 }
                 saveAuth(data);

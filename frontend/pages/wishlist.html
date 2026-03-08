@@ -89,6 +89,9 @@
 
         async function init() {
             if (!requireAuth()) return;
+            const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+            const user = getUser();
+            if (user && adminRoles.includes(user.role)) { window.location.href = 'admin.html'; return; }
             await loadSizes();
             await loadWishlist();
         }

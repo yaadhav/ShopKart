@@ -5,11 +5,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
-public class ExternalApiClient {
+public class ExternalAPIClient {
 
     private final RestClient restClient;
 
-    public ExternalApiClient() {
+    public ExternalAPIClient() {
         this.restClient = RestClient.create();
     }
 

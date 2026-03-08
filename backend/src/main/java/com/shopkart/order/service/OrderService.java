@@ -3,7 +3,7 @@ package com.shopkart.order.service;
 import com.shopkart.cart.internalagent.CartAgent;
 import com.shopkart.cart.model.CartEntity;
 import com.shopkart.catalog.dto.enums.Size;
-import com.shopkart.catalog.internalagent.CatalogAgent;
+import com.shopkart.catalog.internalagent.ProductAgent;
 import com.shopkart.catalog.util.CatalogConstants;
 import com.shopkart.common.util.Constants;
 import com.shopkart.common.util.CurrencyUtil;
@@ -29,7 +29,7 @@ import com.shopkart.order.repo.OrderRepo;
 import com.shopkart.order.util.OrderConstants;
 import com.shopkart.order.util.OrderConstants.Keys;
 import com.shopkart.order.util.OrderExceptionStore;
-import com.shopkart.payment.dto.response.PaymentResponse;
+import com.shopkart.payment.dto.response.ExternalAPIResponse;
 import com.shopkart.payment.internalagent.PaymentAgent;
 import com.shopkart.payment.internalagent.resource.PaymentIntentResource;
 import com.shopkart.payment.service.PaymentGatewayClient;
@@ -59,7 +59,7 @@ public class OrderService {
     private final OrderRepo orderRepo;
     private final OrderMappingRepo orderMappingRepo;
     private final OrderAddressRepo orderAddressRepo;
-    private final CatalogAgent catalogAgent;
+    private final ProductAgent productAgent;
     private final FeeDetailsAgent feeDetailsAgent;
     private final AddressAgent addressAgent;
     private final CartAgent cartAgent;
@@ -70,12 +70,12 @@ public class OrderService {
     public Map<String, Object> createOrder(Long userId, CreateOrderRequest request) {
 
         List<CartEntity> cartEntities = cartAgent.getCartEntities(userId);
-        if (cartEntities.isEmpty()) {
+        if(cartEntities.isEmpty()) {
             throw OrderExceptionStore.EMPTY_CART.exception();
         }
 
         AddressResource address = addressAgent.getAddress(userId, request.getAddressId());
-        if (address == null) {
+        if(address == null) {
             throw OrderExceptionStore.ADDRESS_NOT_FOUND.exception();
         }
 
@@ -83,9 +83,9 @@ public class OrderService {
         BigDecimal orderSavings = BigDecimal.ZERO;
         List<OrderMappingEntity> mappings = new ArrayList<>();
 
-        for (CartEntity cart : cartEntities) {
+        for(CartEntity cart : cartEntities) {
             String sizeName = Size.getName(cart.getSize());
-            Map<String, Object> productMap = catalogAgent.getProductDetails(cart.getProductId(), sizeName);
+            Map<String, Object> productMap = productAgent.getProductDetails(cart.getProductId(), sizeName);
 
             BigDecimal sellingPrice = (BigDecimal) productMap.get(CatalogConstants.Keys.SELLING_PRICE);
             BigDecimal originalPrice = (BigDecimal) productMap.get(CatalogConstants.Keys.ORIGINAL_PRICE);
@@ -111,7 +111,7 @@ public class OrderService {
 
         FeeResource fees = feeDetailsAgent.getConvenienceFees();
         BigDecimal deliveryFee = fees.getDeliveryFee();
-        if (orderAmount.compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
+        if(orderAmount.compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
             deliveryFee = BigDecimal.ZERO;
         }
         BigDecimal convenienceFee = deliveryFee.add(fees.getPlatformFee());
@@ -127,14 +127,17 @@ public class OrderService {
                 .orderTotal(orderTotal)
                 .paymentMode(PaymentMode.getCode(request.getPaymentMode()))
                 .paymentStatus(isPOD ? PaymentStatus.YET_TO_BE_PAID.code : PaymentStatus.INITIATED.code)
-                .orderStatus(isPOD ? OrderStatus.INITIATED.code : OrderStatus.PAYMENT_PENDING.code)
+                .orderStatus(isPOD ? OrderStatus.CONFIRMED.code : OrderStatus.PAYMENT_PENDING.code)
                 .initiatedTime(System.currentTimeMillis())
                 .build());
 
         Long orderId = order.getOrderId();
 
-        for (OrderMappingEntity mapping : mappings) {
+        for(OrderMappingEntity mapping : mappings) {
             mapping.setOrderId(orderId);
+            if(isPOD) {
+                productAgent.deductStock(mapping.getProductId(), mapping.getSize(), mapping.getQuantity());
+            }
         }
         orderMappingRepo.saveAll(mappings);
 
@@ -152,16 +155,16 @@ public class OrderService {
 
         Map<String, Object> response = new LinkedHashMap<>();
 
-        if (isPOD) {
+        if(isPOD) {
             cartAgent.clearCart(userId);
             response.put(Keys.ORDER_ID, orderId);
             response.put(Keys.ORDER_STATUS, OrderStatus.getName(order.getOrderStatus()));
             response.put(Keys.ORDER_STATUS + Keys.FORMATTED_SUFFIX, OrderStatus.getDisplayName(order.getOrderStatus()));
         } else {
             Long paymentIntentId = paymentAgent.createPaymentIntent(userId, orderId, orderTotal);
-            PaymentResponse paymentResponse = paymentGatewayClient.createPaymentMockSuccess(paymentIntentId, userId, orderTotal);
+            ExternalAPIResponse externalAPIResponse = paymentGatewayClient.createPaymentMockSuccess(paymentIntentId, userId, orderTotal);
 
-            if(!paymentResponse.isSuccess()) {
+            if(!externalAPIResponse.isSuccess()) {
                 paymentAgent.updatePaymentIntentStatus(paymentIntentId, PaymentStatus.FAILED.code);
                 order.setPaymentStatus(PaymentStatus.FAILED.code);
                 order.setOrderStatus(OrderStatus.PAYMENT_FAILED.code);
@@ -179,14 +182,14 @@ public class OrderService {
     @Transactional
     public Map<String, Object> cancelPayment(Long userId, CancelPaymentRequest request) {
         PaymentIntentResource intent = paymentAgent.getPaymentIntent(request.getPaymentIntentId());
-        if (intent == null) {
+        if(intent == null) {
             throw PaymentExceptionStore.PAYMENT_INTENT_NOT_FOUND.exception();
         }
-        if (!intent.getUserId().equals(userId)) {
+        if(!intent.getUserId().equals(userId)) {
             throw OrderExceptionStore.ORDER_ACCESS_DENIED.exception();
         }
 
-        if (intent.getPaymentStatus().equals(PaymentStatus.INITIATED.code)) {
+        if(intent.getPaymentStatus().equals(PaymentStatus.INITIATED.code)) {
             paymentAgent.updatePaymentIntentStatus(intent.getPaymentIntentId(), PaymentStatus.FAILED.code);
 
             orderRepo.findById(intent.getOrderId()).ifPresent(order -> {
@@ -204,7 +207,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Map<String, Object> getOrders(Long userId, Map<String, String> params) {
         Map<String, String> effectiveParams = new HashMap<>(params);
-        if (!effectiveParams.containsKey(PageConstants.Params.SORT_ORDER)) {
+        if(!effectiveParams.containsKey(PageConstants.Params.SORT_ORDER)) {
             effectiveParams.put(PageConstants.Params.SORT_ORDER, Constants.Sort.DESC);
         }
 
@@ -214,19 +217,18 @@ public class OrderService {
         Page<OrderEntity> orderPage;
 
         String orderIdSearch = params.get(Keys.ORDER_ID);
-        if (orderIdSearch != null && !orderIdSearch.isBlank()) {
+        if(orderIdSearch != null && !orderIdSearch.isBlank()) {
             try {
                 Long searchOrderId = Long.parseLong(orderIdSearch);
                 List<OrderEntity> list = orderRepo.findByOrderIdAndUserId(searchOrderId, userId)
                         .map(List::of).orElse(List.of());
                 orderPage = new PageImpl<>(list, pageable, list.size());
-            } catch (NumberFormatException e) {
+            } catch(NumberFormatException e) {
                 orderPage = Page.empty(pageable);
             }
-        }
-        else {
+        } else {
             String statusFilter = params.get(Keys.ORDER_STATUS);
-            if (statusFilter != null && !statusFilter.isBlank()) {
+            if(statusFilter != null && !statusFilter.isBlank()) {
                 List<Integer> statusCodes = Arrays.stream(statusFilter.split(","))
                         .map(String::trim)
                         .filter(s -> !s.isEmpty())
@@ -244,10 +246,10 @@ public class OrderService {
         Map<Long, List<OrderMappingEntity>> mappingsByOrderId = orderIds.isEmpty()
                 ? Map.of()
                 : orderMappingRepo.findByOrderIdIn(orderIds).stream()
-                        .collect(Collectors.groupingBy(OrderMappingEntity::getOrderId));
+                .collect(Collectors.groupingBy(OrderMappingEntity::getOrderId));
 
         List<Map<String, Object>> items = new ArrayList<>();
-        for (OrderEntity order : orderPage.getContent()) {
+        for(OrderEntity order : orderPage.getContent()) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put(Keys.ORDER_ID, order.getOrderId());
             item.put(Keys.ORDER_STATUS, OrderStatus.getName(order.getOrderStatus()));
@@ -257,7 +259,7 @@ public class OrderService {
             item.put(Keys.INITIATED_TIME, order.getInitiatedTime());
 
             List<Map<String, Object>> products = new ArrayList<>();
-            for (OrderMappingEntity mapping : mappingsByOrderId.getOrDefault(order.getOrderId(), List.of())) {
+            for(OrderMappingEntity mapping : mappingsByOrderId.getOrDefault(order.getOrderId(), List.of())) {
                 Map<String, Object> product = new LinkedHashMap<>();
                 product.put(Keys.IMAGE_URL, mapping.getImageUrl());
                 product.put(Keys.PRODUCT_NAME, mapping.getProductName());
@@ -277,16 +279,28 @@ public class OrderService {
     public Map<String, Object> getOrderDetails(Long userId, Long orderId) {
         OrderEntity order = orderRepo.findById(orderId)
                 .orElseThrow(OrderExceptionStore.ORDER_NOT_FOUND::exception);
-        if (!order.getUserId().equals(userId)) {
+        if(!order.getUserId().equals(userId)) {
             throw OrderExceptionStore.ORDER_ACCESS_DENIED.exception();
         }
+        return buildOrderDetailsResponse(order);
+    }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> getOrderDetailsAdmin(Long orderId) {
+        OrderEntity order = orderRepo.findById(orderId)
+                .orElseThrow(OrderExceptionStore.ORDER_NOT_FOUND::exception);
+        return buildOrderDetailsResponse(order);
+    }
+
+    private Map<String, Object> buildOrderDetailsResponse(OrderEntity order) {
+        Long orderId = order.getOrderId();
         List<OrderMappingEntity> mappings = orderMappingRepo.findByOrderId(orderId);
         OrderAddressEntity address = orderAddressRepo.findByOrderId(orderId).orElse(null);
         Map<String, Object> paymentDetails = paymentAgent.getPaymentByOrderId(orderId);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put(Keys.ORDER_ID, order.getOrderId());
+        response.put(Keys.USER_ID, order.getUserId());
         response.put(Keys.ORDER_AMOUNT, order.getOrderAmount());
         response.put(Keys.ORDER_AMOUNT + Keys.FORMATTED_SUFFIX, CurrencyUtil.formatWithINR(order.getOrderAmount()));
         response.put(Keys.ORDER_SAVINGS, order.getOrderSavings());
@@ -304,7 +318,7 @@ public class OrderService {
 
         FeeResource fees = feeDetailsAgent.getConvenienceFees();
         BigDecimal deliveryFee = fees.getDeliveryFee();
-        if (order.getOrderAmount().compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
+        if(order.getOrderAmount().compareTo(FREE_DELIVERY_THRESHOLD) >= 0) {
             deliveryFee = BigDecimal.ZERO;
         }
         String deliveryFeeFormatted = deliveryFee.compareTo(BigDecimal.ZERO) == 0
@@ -319,7 +333,7 @@ public class OrderService {
         response.put(Keys.CONVENIENCE_FEE, convenienceFeeMap);
 
         List<Map<String, Object>> products = new ArrayList<>();
-        for (OrderMappingEntity mapping : mappings) {
+        for(OrderMappingEntity mapping : mappings) {
             Map<String, Object> product = new LinkedHashMap<>();
             product.put(Keys.IMAGE_URL, mapping.getImageUrl());
             product.put(Keys.PRODUCT_NAME, mapping.getProductName());
@@ -336,7 +350,7 @@ public class OrderService {
         }
         response.put(Keys.PRODUCTS, products);
 
-        if (address != null) {
+        if(address != null) {
             Map<String, Object> addressMap = new LinkedHashMap<>();
             addressMap.put(Keys.NAME, address.getName());
             addressMap.put(Keys.CONTACT_NUMBER, address.getContactNumber());
@@ -349,23 +363,40 @@ public class OrderService {
             response.put(Keys.ADDRESS, addressMap);
         }
 
-        if (paymentDetails != null) {
+        if(paymentDetails != null) {
             response.putAll(paymentDetails);
         }
 
         return response;
     }
 
+    private static final Map<String, List<OrderStatus>> VALID_STATUS = Map.of(
+            OrderStatus.SHIPPED.name, List.of(OrderStatus.CONFIRMED),
+            OrderStatus.DELIVERED.name, List.of(OrderStatus.SHIPPED)
+    );
+
     @Transactional
     public Map<String, Object> updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
         OrderEntity order = orderRepo.findById(orderId)
                 .orElseThrow(OrderExceptionStore.ORDER_NOT_FOUND::exception);
 
+        if(VALID_STATUS.containsKey(request.getOrderStatus()) && !VALID_STATUS.get(request.getOrderStatus()).contains(OrderStatus.getOrderStatus(order.getOrderStatus()))) {
+            throw OrderExceptionStore.INVALID_ORDER_STATUS.exception();
+        }
+
         int newStatusCode = OrderStatus.getCode(request.getOrderStatus());
         order.setOrderStatus(newStatusCode);
 
-        if (newStatusCode == OrderStatus.DELIVERED.code) {
+        if(newStatusCode == OrderStatus.DELIVERED.code) {
             order.setDeliveredTime(System.currentTimeMillis());
+            order.setPaymentStatus(PaymentStatus.PAID.code);
+        }
+
+        if(newStatusCode == OrderStatus.CONFIRMED.code) {
+            List<OrderMappingEntity> mappings = orderMappingRepo.findByOrderId(orderId);
+            for(OrderMappingEntity mapping : mappings) {
+                productAgent.deductStock(mapping.getProductId(), mapping.getSize(), mapping.getQuantity());
+            }
         }
 
         orderRepo.save(order);

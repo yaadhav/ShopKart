@@ -40,7 +40,7 @@ public class ProductMetaAPI {
                         String name = (String) e.getClass().getField("name").get(e);
                         String displayName = (String) e.getClass().getField("displayName").get(e);
                         return new MetaItem(name, displayName);
-                    } catch (ReflectiveOperationException ex) {
+                    } catch(ReflectiveOperationException ex) {
                         throw new IllegalStateException("Enum missing expected fields", ex);
                     }
                 })

@@ -23,7 +23,7 @@ public class AdminAPI {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('owner')")
+    @PreAuthorize("hasAnyRole('owner', 'super_admin')")
     public ResponseEntity<CreateAdminResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createAdmin(request));
     }

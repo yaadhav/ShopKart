@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 public class RecordPaymentRequest {
     private String secretKey;
     private Long paymentIntentId;
-    private String paymentMethod;    // "upi", "credit_card", etc.
-    private BigDecimal amountPaid;
+    private String paymentMethod;
+    private BigDecimal totalAmount;
     private String referenceId;
-    private boolean success;         // true = payment succeeded, false = payment failed
+    private String status;
 }

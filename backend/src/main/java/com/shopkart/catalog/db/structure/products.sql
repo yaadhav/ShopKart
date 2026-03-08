@@ -86,3 +86,23 @@ CREATE TABLE productstock (
 ALTER SEQUENCE productstock_productstockid_seq RESTART WITH 10000000001;
 
 CREATE INDEX idx_productstock_productid ON productstock(productid);
+
+
+CREATE TABLE rating (
+    ratingid BIGSERIAL PRIMARY KEY,
+    userid BIGINT NOT NULL,
+    productid BIGINT NOT NULL,
+
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+
+    createdtime BIGINT NOT NULL,
+    updatedtime BIGINT NOT NULL,
+
+    UNIQUE (userid, productid),
+    FOREIGN KEY (productid) REFERENCES products(productid) ON DELETE CASCADE
+);
+
+ALTER SEQUENCE rating_ratingid_seq RESTART WITH 10000000001;
+
+CREATE INDEX idx_rating_productid ON rating(productid);
+CREATE INDEX idx_rating_userid ON rating(userid);

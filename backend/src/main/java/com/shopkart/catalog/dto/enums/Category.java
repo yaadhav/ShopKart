@@ -8,12 +8,13 @@ public enum Category {
     TSHIRTS(1, "tshirts", "T-Shirts"),
     SHIRTS(2, "shirts", "Shirts"),
     PANTS(3, "pants", "Pants"),
-    TRACK_PANTS(4, "track_pants", "Track Pants"),
-    SHORTS(5, "shorts", "Shorts"),
-    TOPS(6, "tops", "Tops"),
-    LEGGINGS(7, "leggings", "Leggings"),
-    SAREES(8, "sarees", "Sarees"),
-    DRESSES(9, "dresses", "Dresses");;
+    JEANS(4, "jeans", "Jeans"),
+    TRACK_PANTS(5, "track_pants", "Track Pants"),
+    SHORTS(6, "shorts", "Shorts"),
+    TOPS(7, "tops", "Tops"),
+    LEGGINGS(8, "leggings", "Leggings"),
+    SAREES(9, "sarees", "Sarees"),
+    DRESSES(10, "dresses", "Dresses");;
 
     public final int code;
     public final String name;

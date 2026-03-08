@@ -29,7 +29,7 @@ public class ProductFormatHandler {
     }
 
     public static String formatRatingDisplay(BigDecimal rating) {
-        if (rating == null) return null;
+        if(rating == null) return null;
         return rating.setScale(1, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
@@ -38,7 +38,7 @@ public class ProductFormatHandler {
     }
 
     public static String formatStarPercentage(int starCount, int total) {
-        if (total == 0) return "0%";
+        if(total == 0) return "0%";
         return Math.round(starCount * 100.0 / total) + Constants.Symbols.PERCENT;
     }
 }

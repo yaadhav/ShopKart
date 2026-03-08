@@ -4,6 +4,7 @@ import com.shopkart.order.dto.request.UpdateOrderStatusRequest;
 import com.shopkart.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,13 +15,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin/orders")
-@PreAuthorize("hasRole('admin')")
-public class AdminOrderAPI {
+@PreAuthorize("hasAnyRole('owner', 'super_admin', 'admin', 'order_admin')")
+public class OrderAdminAPI {
 
     private final OrderService orderService;
 
-    public AdminOrderAPI(OrderService orderService) {
+    public OrderAdminAPI(OrderService orderService) {
         this.orderService = orderService;
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<Map<String, Object>> getOrderDetails(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderDetailsAdmin(orderId));
     }
 
     @PatchMapping("/{orderId}/status")

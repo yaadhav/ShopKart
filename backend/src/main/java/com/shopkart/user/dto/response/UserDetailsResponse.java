@@ -21,7 +21,7 @@ public class UserDetailsResponse {
     private String phoneNumber;
 
     @JsonProperty("gender")
-    private Short gender;
+    private Integer gender;
 
     @JsonProperty("date_of_birth")
     private LocalDate dateOfBirth;

@@ -35,26 +35,28 @@ function redirectIfLoggedIn() {
 }
 
 /* ── Nav ──────────────────────────────────────── */
+const ADMIN_ROLES = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+
 function updateNav() {
     const links = document.getElementById("auth-links");
     if (!links) return;
 
     const user = getUser();
-    if (user) {
-        const isRegularUser = user.role !== "admin" && user.role !== "owner";
-        const roleLabel = !isRegularUser ? `<span class="nav-role"> · ${user.role}</span>` : "";
-        const ordersLink = isRegularUser
-            ? `<a href="${BASE}/pages/orders.html">Orders</a>` : "";
-        const wishlistBtn = isRegularUser
-            ? `<a href="${BASE}/pages/wishlist.html" class="nav-icon-btn" title="Wishlist">♡</a>` : "";
-        const cartBtn = isRegularUser
-            ? `<a href="${BASE}/pages/cart.html" class="nav-user nav-cart">Cart</a>` : "";
+    if (user && ADMIN_ROLES.includes(user.role)) {
+        const roleLabel = `<span class="nav-role"> · ${user.role}</span>`;
         links.innerHTML =
             `<a href="${BASE}/pages/products.html">Products</a>` +
-            ordersLink +
-            wishlistBtn +
-            cartBtn +
-            `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}${roleLabel}</a>`;
+            `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}${roleLabel}</a>` +
+            `<a href="${BASE}/pages/admin.html">Admin Panel</a>` +
+            `<a href="#" onclick="logout();return false;">Logout</a>`;
+    } else if (user) {
+        links.innerHTML =
+            `<a href="${BASE}/pages/products.html">Products</a>` +
+            `<a href="${BASE}/pages/orders.html">Orders</a>` +
+            `<a href="${BASE}/pages/wishlist.html" class="nav-icon-btn" title="Wishlist">♡</a>` +
+            `<a href="${BASE}/pages/cart.html" class="nav-user nav-cart">Cart</a>` +
+            `<a href="${BASE}/pages/account.html" class="nav-user">${user.name}</a>` +
+            `<a href="#" onclick="logout();return false;">Logout</a>`;
     } else {
         links.innerHTML =
             `<a href="${BASE}/pages/products.html">Products</a>` +

@@ -116,7 +116,7 @@
                 <div class="spinner"></div>
                 <span class="caption">Processing your payment...</span>
             </div>
-            <div class="warning">⚠ Do not close or go back</div>
+            <div class="warning">⚠ Do not close or go back from this page!</div>
             <div class="order-info" id="order-info"></div>
         </div>
     </div>
@@ -144,6 +144,10 @@
         let cancelled = false;
 
         function init() {
+            const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+            const pUser = getUser();
+            if (pUser && adminRoles.includes(pUser.role)) { window.location.href = 'admin.html'; return; }
+
             if (!orderId || !paymentIntentId) {
                 document.querySelector('.payment-card').innerHTML =
                     `<p style="color:#c0392b;font-weight:600;">Invalid payment session. Missing order or payment info.</p>
@@ -223,10 +227,10 @@
                     body: JSON.stringify({
                         secret_key: INBOUND_SECRET,
                         payment_intent_id: parseInt(paymentIntentId),
-                        payment_method: 'upi',
-                        amount_paid: orderTotal,
+                        payment_method: 'card',
+                        total_amount: orderTotal,
                         reference_id: refId,
-                        success: true
+                        status: 'success'
                     })
                 });
 
@@ -234,7 +238,9 @@
                 clearInterval(timerInterval);
                 localStorage.removeItem('order_total');
 
-                showResult('✓', 'Payment Successful!', '#27ae60');
+                if(resp.status === 'success') showResult('✓', 'Payment Successful!', '#27ae60');
+                else showResult('✗', 'Payment Failed', '#c0392b');
+
                 setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
 
             } catch (e) {

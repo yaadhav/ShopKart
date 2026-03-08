@@ -246,46 +246,6 @@
             background: #f5f5f5;
         }
         
-        .btn-favorite {
-            width: 44px;
-            height: 44px;
-            border: none;
-            background: #000;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 24px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-        }
-        
-        .btn-favorite:hover {
-            background: #333;
-            transform: scale(1.05);
-        }
-        
-        .btn-favorite.active {
-            background: #000;
-        }
-        
-        .heart-icon {
-            display: inline-block;
-            transition: all 0.3s;
-            transform: scaleY(1.15);
-        }
-        
-        .heart-icon.filled {
-            color: #ff4757;
-            animation: heartbeat 0.3s ease-in-out;
-        }
-        
-        @keyframes heartbeat {
-            0%, 100% { transform: scaleY(1.15); }
-            50% { transform: scaleY(1.35); }
-        }
-        
         .ratings-chart {
             background: #fff;
             border: 1px solid #e0e0e0;
@@ -484,10 +444,7 @@
                     
                     <div class="action-buttons">
                         <button class="btn-primary" onclick="addToCart()">Add to Cart</button>
-                        <button class="btn-secondary" onclick="buyNow()">Buy Now</button>
-                        <button class="btn-favorite" onclick="toggleFavorite()">
-                            <span class="heart-icon" id="heart-icon">❤</span>
-                        </button>
+                        <button class="btn-secondary" onclick="addToWishlist()">Add to Wishlist</button>
                     </div>
                     
                     <div class="product-details-section" id="description-section" style="display:none;">
@@ -515,7 +472,6 @@
 
         let productData = null;
         let selectedSize = null;
-        let wishlistId = null;
         let metaSizes = [];
 
         async function loadProductDetails() {
@@ -529,30 +485,16 @@
                 renderProduct(productData);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('product-details').style.display = 'block';
-                if (isLoggedIn()) loadWishlistState();
             } catch (err) {
                 document.getElementById('loading').textContent = 'Failed to load product details: ' + err.message;
             }
         }
 
-        async function loadWishlistState() {
-            try {
-                const items = await apiCall('/wishlist');
-                const match = items.find(item => item.product_id == productId);
-                if (match) {
-                    wishlistId = match.wishlist_id;
-                    const heartIcon = document.getElementById('heart-icon');
-                    heartIcon.classList.add('filled');
-                    heartIcon.style.color = '#ff4757';
-                }
-            } catch (e) {}
-        }
-
         function renderProduct(data) {
             // Name and tagline
             document.getElementById('product-name').textContent = data.name;
-            if (data.tagline) {
-                document.getElementById('product-tagline').textContent = data.tagline;
+            if (data.tag_line) {
+                document.getElementById('product-tagline').textContent = data.tag_line;
             } else {
                 document.getElementById('product-tagline').style.display = 'none';
             }
@@ -585,10 +527,10 @@
                 const details = data.details;
                 
                 const detailsToShow = [
-                    { label: 'Style', value: data.fashion_style },
-                    { label: 'Brand', value: data.brand },
-                    { label: 'Category', value: data.category },
-                    { label: 'Occasion', value: data.occasion },
+                    { label: 'Style', value: data.fashion_style_formatted },
+                    { label: 'Brand', value: data.brand_formatted },
+                    { label: 'Category', value: data.category_formatted },
+                    { label: 'Occasion', value: data.occasion_formatted },
                     { label: 'Color', value: details.color },
                     { label: 'Material', value: details.material },
                     { label: 'Length', value: details.length },
@@ -685,9 +627,8 @@
         }
 
         function renderRatingBreakdown(breakdown) {
-            const hasData = breakdown['5_star'] && breakdown['5_star'] !== '0%';
-            if (!hasData && breakdown['5_star'] === '0%' &&
-                breakdown['4_star'] === '0%' && breakdown['3_star'] === '0%') return;
+            const hasData = breakdown['5_star'] !== undefined;
+            if (!hasData) return;
 
             document.getElementById('rating-number').textContent = productData.rating_formatted || productData.rating;
             document.getElementById('customer-count').textContent = productData.rating_count_formatted || '';
@@ -696,9 +637,8 @@
             container.innerHTML = '';
             
             for (let i = 5; i >= 1; i--) {
-                const pctStr = breakdown[`${i}_star`] || '0%';
-                const pctWidth = parseFloat(pctStr) || 0;
                 const pctFormatted = breakdown[`${i}_star_formatted`] || '0%';
+                const pctWidth = parseFloat(pctFormatted) || 0;
                 
                 const bar = document.createElement('div');
                 bar.className = 'rating-bar';
@@ -745,52 +685,44 @@
             }
         }
 
-        function buyNow() {
+        async function addToWishlist() {
             if (!isLoggedIn()) {
                 window.location.href = 'login.html';
                 return;
             }
-            if (!selectedSize) {
-                alert('Please select a size');
-                return;
+            try {
+                await apiCall('/wishlist', {
+                    method: 'POST',
+                    body: JSON.stringify({ product_id: parseInt(productId) })
+                });
+                alert(`${productData.name} added to wishlist!`);
+            } catch (e) {
+                alert(e.message);
             }
-            alert('Buy now feature coming soon!');
         }
 
-        async function toggleFavorite() {
+        async function leaveRating() {
             if (!isLoggedIn()) {
                 window.location.href = 'login.html';
                 return;
             }
-            const heartIcon = document.getElementById('heart-icon');
-            const isFilled = heartIcon.classList.contains('filled');
-
-            if (isFilled && wishlistId) {
-                try {
-                    await apiCall(`/wishlist/${wishlistId}`, { method: 'DELETE' });
-                    wishlistId = null;
-                    heartIcon.classList.remove('filled');
-                    heartIcon.style.color = '#fff';
-                } catch (e) {
-                    alert('Failed to remove from wishlist: ' + e.message);
-                }
-            } else {
-                try {
-                    const res = await apiCall('/wishlist', {
-                        method: 'POST',
-                        body: JSON.stringify({ product_id: parseInt(productId) })
-                    });
-                    wishlistId = res.wishlist_id;
-                    heartIcon.classList.add('filled');
-                    heartIcon.style.color = '#ff4757';
-                } catch (e) {
-                    alert('Failed to add to wishlist: ' + e.message);
-                }
+            const val = prompt('Rate this product (1 to 5 stars):');
+            if (!val) return;
+            const rating = parseInt(val);
+            if (isNaN(rating) || rating < 1 || rating > 5) {
+                alert('Please enter a number between 1 and 5');
+                return;
             }
-        }
-        
-        function leaveRating() {
-            alert('Leave a rating feature coming soon!');
+            try {
+                const resp = await apiCall(`/products/${productId}/rate`, {
+                    method: 'POST',
+                    body: JSON.stringify({ rating })
+                });
+                alert(`Rated ${rating} star${rating > 1 ? 's' : ''}! Average: ${resp.average_rating}`);
+                loadProductDetails();
+            } catch (e) {
+                alert('Failed to rate: ' + e.message);
+            }
         }
 
         loadProductDetails();

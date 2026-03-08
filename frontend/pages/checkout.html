@@ -327,6 +327,9 @@
 
         async function init() {
             if (!requireAuth()) return;
+            const adminRoles = ['admin', 'owner', 'super_admin', 'order_admin', 'product_admin'];
+            const user = getUser();
+            if (user && adminRoles.includes(user.role)) { window.location.href = 'admin.html'; return; }
             await Promise.all([loadCart(), loadAddresses()]);
             render();
         }
@@ -398,7 +401,7 @@
                     <div class="payment-option ${paymentMode === 'online' ? 'active' : ''}" onclick="selectPayment('online')">
                         <span class="radio-dot"></span> Pay Online
                     </div>
-                    <div class="payment-option ${paymentMode === 'cash_on_delivery' ? 'active' : ''}" onclick="selectPayment('cash_on_delivery')">
+                    <div class="payment-option ${paymentMode === 'pay_on_delivery' ? 'active' : ''}" onclick="selectPayment('pay_on_delivery')">
                         <span class="radio-dot"></span> Pay on Delivery
                     </div>
                 </div>`;
@@ -431,9 +434,9 @@
                 </div>` : `
                 <div class="checkout-item__right">
                     <div class="checkout-item__pricing">
-                        <div class="checkout-item__price">${p.selling_price_formatted}</div>
+                        <div class="checkout-item__price">${p.item_selling_total_formatted}</div>
                         <div class="checkout-item__orig-disc">
-                            ${p.original_price_formatted ? `<span class="checkout-item__original">${p.original_price_formatted}</span>` : ''}
+                            ${p.original_price_formatted ? `<span class="checkout-item__original">${p.item_original_total_formatted}</span>` : ''}
                             ${p.discount_percentage_formatted ? `<span class="checkout-item__discount">${p.discount_percentage_formatted}</span>` : ''}
                         </div>
                         <div class="checkout-item__savings">Saves ${p.item_savings_formatted}</div>
@@ -577,7 +580,7 @@
                     })
                 });
 
-                if (paymentMode === 'cash_on_delivery') {
+                if (paymentMode === 'pay_on_delivery') {
                     showResultPopup('✓', 'Order placed successfully!', 'green');
                     setTimeout(() => { window.location.href = 'orders.html'; }, 2000);
                 } else {

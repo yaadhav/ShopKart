@@ -50,8 +50,7 @@ public class CartAPI {
 
     @PatchMapping("/{cartId}")
     @PreAuthorize("hasRole('user')")
-    public ResponseEntity<Map<String, Object>> updateQuantity(@PathVariable Long cartId,
-                                                               @Valid @RequestBody UpdateQuantityRequest request) {
+    public ResponseEntity<Map<String, Object>> updateQuantity(@PathVariable Long cartId, @Valid @RequestBody UpdateQuantityRequest request) {
         Long userId = userAgent.getCurrentUserId();
         return ResponseEntity.ok(cartService.updateQuantity(userId, cartId, request.getQuantity()));
     }

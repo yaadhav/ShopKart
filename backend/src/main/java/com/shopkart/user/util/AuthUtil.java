@@ -1,5 +1,6 @@
 package com.shopkart.user.util;
 
+import com.shopkart.common.util.Constants;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -7,10 +8,17 @@ import org.springframework.security.oauth2.jwt.Jwt;
 public class AuthUtil {
     public static Long getUserIdFromJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+        if(authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
             throw new IllegalStateException("No valid authentication found");
         }
-        Jwt jwt = (Jwt) authentication.getPrincipal();
         return Long.parseLong(jwt.getSubject());
+    }
+
+    public static String getRoleFromJwt() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new IllegalStateException("No valid authentication found");
+        }
+        return jwt.getClaimAsString(Constants.Jwt.CLAIM_ROLE);
     }
 }

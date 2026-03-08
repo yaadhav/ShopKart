@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +27,11 @@ public class AddressService {
 
     @Transactional
     public AddressResponse createAddress(Long userId, AddressRequest request) {
-        if (!userRepo.existsById(userId)) {
+        if(!userRepo.existsById(userId)) {
             throw AuthExceptionStore.USER_NOT_FOUND.exception();
         }
 
-        if (Boolean.TRUE.equals(request.getIsDefault())) {
+        if(Boolean.TRUE.equals(request.getIsDefault())) {
             addressRepo.unsetDefaultAddressForUser(userId);
         }
 
@@ -44,7 +45,7 @@ public class AddressService {
                 .city(request.getCity())
                 .state(request.getState())
                 .pincode(request.getPincode())
-                .isDefault(request.getIsDefault() != null ? request.getIsDefault() : false)
+                .isDefault(Optional.ofNullable(request.getIsDefault()).orElse(false))
                 .build();
 
         address = addressRepo.save(address);
@@ -70,7 +71,7 @@ public class AddressService {
         AddressEntity address = addressRepo.findByAddressIdAndUserId(addressId, userId)
                 .orElseThrow(UserExceptionStore.ADDRESS_NOT_FOUND::exception);
 
-        if (Boolean.TRUE.equals(request.getIsDefault()) && !address.getIsDefault()) {
+        if(Boolean.TRUE.equals(request.getIsDefault()) && !address.getIsDefault()) {
             addressRepo.unsetDefaultAddressForUser(userId);
         }
 
@@ -82,7 +83,7 @@ public class AddressService {
         address.setCity(request.getCity());
         address.setState(request.getState());
         address.setPincode(request.getPincode());
-        address.setIsDefault(request.getIsDefault() != null ? request.getIsDefault() : false);
+        address.setIsDefault(Optional.ofNullable(request.getIsDefault()).orElse(false));
 
         address = addressRepo.save(address);
 
